@@ -1,0 +1,22 @@
+{
+  "name": "tron-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@noble/secp256k1": "^1.7.1",
+    "mongoose": "^8.5.3",
+    "telegraf": "^4.16.3",
+    "tronweb": "^5.3.2"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
