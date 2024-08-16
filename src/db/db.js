@@ -91,11 +91,11 @@ export const updateUserTrades = async (
     }
 }
 
-export const updateUserTradeTime = async (userId, bought_at, timestamp) => {
+export const updateUserTrade = async (userId, bought_at, timestamp) => {
     try {
         const user = await UserModel.findOneAndUpdate(
             { userId, trades : { $elemMatch : { bought_at } } },
-            { $set : { "trades.$.sold_at" : timestamp } }
+            { $set : { "trades.$.sold_at" : timestamp, "trades.$.sold": true } }
         )
 
         return user

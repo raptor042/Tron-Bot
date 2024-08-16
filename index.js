@@ -1,8 +1,8 @@
 import { Telegraf, Markup } from "telegraf"
 import { config } from "dotenv"
 import { connectDB, createUser, getUser, updateUserTrades } from "./src/db/db.js"
-import { buy, getAmountsOut, getConnection, getTokenInfo } from "./src/web3/web3.js"
-import { isUser } from "./src/utils.js"
+import { buy, getAmountsOut, getConnection, getTimestamp, getTokenInfo } from "./src/web3/web3.js"
+import { isUser, monitorPrices, toDecimals } from "./src/utils.js"
 
 config()
 
@@ -55,6 +55,9 @@ bot.command("buy", async ctx => {
                     const tokenInfo = await getTokenInfo(ctx.args[0])
                     console.log(tokenInfo)
 
+                    const timestamp = await getTimestamp()
+                    console.log(timestamp)
+
                     const amountsOut = await getAmountsOut(ctx.args[0], ctx.args[1])
                     console.log(amountsOut)
 
@@ -66,18 +69,20 @@ bot.command("buy", async ctx => {
                         user.pubKey,
                         ctx.args[1]
                     )
-                    console.log(result)
+                    console.log(result, toDecimals(result[1]), tokenInfo[0])
 
                     if(result[2]) {
                         await updateUserTrades(
                             ctx.message.from.id,
                             ctx.args[0],
                             "WTRX",
-                            tokenInfo[0],
+                            tokenInfo[1],
+                            tokenInfo[4],
                             ctx.args[1],
-                            amountsOut[1],
+                            toDecimals(result[1], tokenInfo[0]),
                             ctx.args[2],
-                            ctx.args[3]
+                            ctx.args[3],
+                            timestamp
                         )
 
                         await ctx.replyWithHTML("<i>📈 Trade successfully excecuted.</i>")
@@ -99,3 +104,7 @@ bot.command("buy", async ctx => {
 connectDB()
 
 bot.launch()
+
+setInterval(() => {
+    monitorPrices()
+}, 1000 * 60 * 3);

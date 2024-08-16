@@ -4,6 +4,22 @@ import { PairERC20ABI, SunSwapV2Factory, SunSwapV2FactoryABI, SunSwapV2Router, S
 
 config()
 
+export const getConnection = () => {
+    if(process.env.NODE_ENV == "DEV") {
+        return new TronWeb({
+            fullHost: process.env.TRON_MAINNET_URL,
+            headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
+            privateKey: process.env.PRIVATE_KEY
+        })
+    } else {
+        return new TronWeb({
+            fullHost: process.env.TRON_MAINNET_URL,
+            headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
+            privateKey: process.env.PRIVATE_KEY
+        })
+    }
+}
+
 export const getTimestamp = async () => {
     const web3 = getConnection()
     const block = await web3.trx.getCurrentBlock()
@@ -24,6 +40,8 @@ export const getTokenInfo = async (address) => {
         
         const symbol = await token.symbol().call()
         console.log(symbol)
+        const decimals = await token.decimals().call()
+        console.log(Number(decimals))
         const token0 = await _pair.token0().call()
         console.log(token0)
         const token1 = await _pair.token1().call()
@@ -38,7 +56,7 @@ export const getTokenInfo = async (address) => {
             price = Number(reserves[1]) / Number(reserves[0])
         }
 
-        return [symbol, web3.address.fromHex(token0), web3.address.fromHex(token1), price]
+        return [Number(decimals), symbol, web3.address.fromHex(token0), web3.address.fromHex(token1), price]
     } catch (err) {
         console.log(err)
 
@@ -90,18 +108,31 @@ export const buy = async (address, user, amount) => {
     }
 }
 
-export const getConnection = () => {
-    if(process.env.NODE_ENV == "DEV") {
-        return new TronWeb({
-            fullHost: process.env.TRON_MAINNET_URL,
-            headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
-            privateKey: process.env.PRIVATE_KEY
+export const sell = async (address, user, amount) => {
+    try {
+        const web3 = getConnection()
+        const router = await web3.contract(SunSwapV2RouterABI, SunSwapV2Router)
+
+        const deadline = await getTimestamp()
+        console.log(deadline)
+
+        const result = await router.swapExactTokensForETH(
+            amount,
+            0,
+            [address, WTRX],
+            user,
+            deadline + 1000
+        ).send({
+            feeLimit: 100_000_000,
+            callValue: 0,
+            shouldPollResponse: true
         })
-    } else {
-        return new TronWeb({
-            fullHost: process.env.TRON_MAINNET_URL,
-            headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
-            privateKey: process.env.PRIVATE_KEY
-        })
+        console.log(result)
+
+        return [Number(result[0][0]), Number(result[0][1]), true]
+    } catch (err) {
+        console.log(err)
+
+        throw err
     }
 }
