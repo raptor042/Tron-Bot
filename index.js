@@ -1,7 +1,7 @@
 import { Telegraf, Markup } from "telegraf"
 import { config } from "dotenv"
 import { connectDB, createUser, getUser, updateUserTrades } from "./src/db/db.js"
-import { buy, getAmountsOut, getConnection, getTimestamp, getTokenInfo } from "./src/web3/web3.js"
+import { approve, buy, getAmountsOut, getConnection, getTimestamp, getTokenInfo } from "./src/web3/web3.js"
 import { isUser, monitorPrices, toDecimals } from "./src/utils.js"
 
 config()
@@ -67,9 +67,10 @@ bot.command("buy", async ctx => {
                     let result = await buy(
                         ctx.args[0],
                         user.pubKey,
+                        user.secKey,
                         ctx.args[1]
                     )
-                    console.log(result, toDecimals(result[1]), tokenInfo[0])
+                    console.log(result, toDecimals(result[1], tokenInfo[0], false), tokenInfo[0])
 
                     if(result[2]) {
                         await updateUserTrades(
@@ -79,12 +80,12 @@ bot.command("buy", async ctx => {
                             tokenInfo[1],
                             tokenInfo[4],
                             ctx.args[1],
-                            toDecimals(result[1], tokenInfo[0]),
+                            toDecimals(result[1], tokenInfo[0], false),
                             ctx.args[2],
                             ctx.args[3],
                             timestamp
                         )
-
+    
                         await ctx.replyWithHTML("<i>📈 Trade successfully excecuted.</i>")
                     }
                 } else {
@@ -107,4 +108,4 @@ bot.launch()
 
 setInterval(() => {
     monitorPrices()
-}, 1000 * 60 * 3);
+}, 1000 * 60 * 5);

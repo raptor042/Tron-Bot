@@ -15,6 +15,7 @@ const UserSchema = new Schema({
             quote_amount: Number,
             take_profit: Number,
             stop_loss: Number,
+            pNl: Number,
             bought_at: Number,
             sold_at: Number,
             sold: Boolean

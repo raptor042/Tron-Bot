@@ -4,18 +4,18 @@ import { PairERC20ABI, SunSwapV2Factory, SunSwapV2FactoryABI, SunSwapV2Router, S
 
 config()
 
-export const getConnection = () => {
+export const getConnection = (secKey) => {
     if(process.env.NODE_ENV == "DEV") {
         return new TronWeb({
             fullHost: process.env.TRON_MAINNET_URL,
             headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
-            privateKey: process.env.PRIVATE_KEY
+            privateKey: secKey || process.env.PRIVATE_KEY
         })
     } else {
         return new TronWeb({
             fullHost: process.env.TRON_MAINNET_URL,
             headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
-            privateKey: process.env.PRIVATE_KEY
+            privateKey: secKey || process.env.PRIVATE_KEY
         })
     }
 }
@@ -25,6 +25,14 @@ export const getTimestamp = async () => {
     const block = await web3.trx.getCurrentBlock()
 
     return Number(block.block_header.raw_data.timestamp) / 1000
+}
+
+export const getBandwidth = async () => {
+    const web3 = getConnection()
+    const bandwidth = await web3.trx.getBandwidth()
+    const price = await web3.trx.getBandwidthPrices()
+
+    return [bandwidth, price]
 }
 
 export const getTokenInfo = async (address) => {
@@ -80,9 +88,32 @@ export const getAmountsOut = async (address, amount) => {
     }
 }
 
-export const buy = async (address, user, amount) => {
+export const approve = async (address, pub, sec, amount) => {
     try {
-        const web3 = getConnection()
+        const web3 = getConnection(sec)
+        const token = await web3.contract(PairERC20ABI, address)
+
+        const allowance = await token.allowance(pub, SunSwapV2Router).call()
+        console.log(Number(allowance))
+
+        const result = await token.approve(SunSwapV2Router, amount + 1000).send({
+            feeLimit: 100_000_000,
+            callValue: 0,
+            shouldPollResponse: true
+        })
+        console.log(result)
+
+        return result
+    } catch (err) {
+        console.log(err)
+
+        throw err
+    }
+}
+
+export const buy = async (address, pub, sec, amount) => {
+    try {
+        const web3 = getConnection(sec)
         const router = await web3.contract(SunSwapV2RouterABI, SunSwapV2Router)
 
         const deadline = await getTimestamp()
@@ -91,8 +122,8 @@ export const buy = async (address, user, amount) => {
         const result = await router.swapExactETHForTokens(
             0,
             [WTRX, address],
-            user,
-            deadline + 1000
+            pub,
+            deadline + 2000
         ).send({
             feeLimit: 100_000_000,
             callValue: amount * (1_000_000),
@@ -108,9 +139,9 @@ export const buy = async (address, user, amount) => {
     }
 }
 
-export const sell = async (address, user, amount) => {
+export const sell = async (address, pub, sec, amount) => {
     try {
-        const web3 = getConnection()
+        const web3 = getConnection(sec)
         const router = await web3.contract(SunSwapV2RouterABI, SunSwapV2Router)
 
         const deadline = await getTimestamp()
@@ -120,8 +151,8 @@ export const sell = async (address, user, amount) => {
             amount,
             0,
             [address, WTRX],
-            user,
-            deadline + 1000
+            pub,
+            deadline + 2000
         ).send({
             feeLimit: 100_000_000,
             callValue: 0,
