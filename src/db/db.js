@@ -42,7 +42,13 @@ export const createUser = async (userId, username, pubKey, secKey) => {
             username,
             pubKey,
             secKey,
-            trades: []
+            trades: [],
+            settings: {
+                buy_with: 0,
+                auto_buy: false,
+                sell_at: 100,
+                auto_sell: true,
+            }
         })
 
         const data = await user.save()
@@ -61,8 +67,6 @@ export const updateUserTrades = async (
     price,
     base_amount,
     quote_amount,
-    take_profit,
-    stop_loss,
     bought_at,
 ) => {
     try {
@@ -73,12 +77,10 @@ export const updateUserTrades = async (
             price,
             base_amount,
             quote_amount,
-            take_profit,
-            stop_loss,
             bought_at,
             pNl: 0,
             sold_at: 0,
-            sold: false
+            sold: false,
         }
 
         const user = await UserModel.findOneAndUpdate(
@@ -97,6 +99,71 @@ export const updateUserTrade = async (userId, bought_at, timestamp, pnl) => {
         const user = await UserModel.findOneAndUpdate(
             { userId, trades : { $elemMatch : { bought_at } } },
             { $set : { "trades.$.sold_at" : timestamp, "trades.$.sold": true, "trades.$.pNl": pnl } }
+        )
+
+        return user
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const updateUserWallet = async (userId, pubKey, secKey) => {
+    try {
+        const user = await UserModel.findOneAndUpdate(
+            { userId },
+            { $set : { pubKey, secKey } }
+        )
+
+        return user
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const updateUserAutoBuySetting = async (userId, buy) => {
+    try {
+        const user = await UserModel.findOneAndUpdate(
+            { userId },
+            { $set : { "settings.auto_buy": buy } }
+        )
+
+        return user
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const updateUserAutoSellSetting = async (userId, sell) => {
+    try {
+        const user = await UserModel.findOneAndUpdate(
+            { userId },
+            { $set : { "settings.auto_sell": sell } }
+        )
+
+        return user
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const updateUserBuyWithSetting = async (userId, buy) => {
+    try {
+        const user = await UserModel.findOneAndUpdate(
+            { userId },
+            { $set : { "settings.buy_with": buy } }
+        )
+
+        return user
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const updateUserSellAtSetting = async (userId, sell) => {
+    try {
+        const user = await UserModel.findOneAndUpdate(
+            { userId },
+            { $set : { "settings.sell_at": sell } }
         )
 
         return user

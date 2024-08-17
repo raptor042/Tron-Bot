@@ -1,7 +1,7 @@
-import { Telegraf, Markup } from "telegraf"
+import { Telegraf, Markup, session } from "telegraf"
 import { config } from "dotenv"
-import { connectDB, createUser, getUser, updateUserTrades } from "./src/db/db.js"
-import { approve, buy, getAmountsOut, getConnection, getTimestamp, getTokenInfo } from "./src/web3/web3.js"
+import { connectDB, createUser, getUser, updateUserAutoBuySetting, updateUserAutoSellSetting, updateUserBuyWithSetting, updateUserSellAtSetting, updateUserTrades, updateUserWallet } from "./src/db/db.js"
+import { approve, buy, getAmountsOut, getConnection, getTimestamp, getTokenInfo, withdraw } from "./src/web3/web3.js"
 import { isUser, monitorPrices, toDecimals } from "./src/utils.js"
 
 config()
@@ -10,6 +10,7 @@ const URL = process.env.TELEGRAM_BOT_API
 
 const bot = new Telegraf(URL)
 
+bot.use(session({ defaultSession: () => ({ token: ''}) }));
 bot.use(Telegraf.log())
 
 bot.command("start", async ctx => {
@@ -18,7 +19,7 @@ bot.command("start", async ctx => {
             const is_user = await isUser(ctx.message.from.id)
             console.log(is_user)
     
-            if(!is_user) {
+            if(!is_user[1]) {
                 const web3 = getConnection()
                 const account = await web3.createAccount()
                 console.log(account)
@@ -31,109 +32,650 @@ bot.command("start", async ctx => {
                 )
                 console.log(user)
     
-                await ctx.replyWithHTML(`<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<b>Welcome to the best TRON trading bot where you can buy/sell at light speeds and secure massive profits 💰.</b>\n\n<b>A wallet has been created for you which will be used only for trading, make sure you fund the wallet with TRX and keep the private key safe.</b>\n\n<b>Public Address:</b><i>${account.address.base58}</i>\n\n<b>Private Key:</b><i>${account.privateKey}</i>\n\n<b>💰 Wanna buy a bag, 👇 Follow the instructions below:</b>\n\n<b>1. Make sure you pass only four(4) arguments to the '/buy' command.\n\n2. These arguments must come in the folowing order ie: \n'Address of token to buy(ie: TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR)'\n'Amount of token to buy(ie: 1000)'\n'Take profit for the trade in percentage(%)'\n'Stop loss for the trade in percentage(%)'.</b>\n\n<i>Example: '/buy TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR 1000 100 10'.</i>\n\n<i>Powered by Raptor 👾\n\nBuilt on Tron 🤖.</i>`)
+                await ctx.replyWithHTML(
+                    `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the best <b>TRON trading bot</b> where you can buy/sell at light speeds and secure massive profits 💰.</i>\n\n<i>A wallet has been created for you which will be used only for trading, make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<i>${account.address.base58}</i>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
+                    {
+                        parse_mode : "HTML",
+                        ...Markup.inlineKeyboard([
+                            [
+                                Markup.button.callback("🛒 Buy", "buy"),
+                                Markup.button.callback("🗑 Sell & Manage", "sell"),                          
+                            ],
+                            [
+                                Markup.button.callback("💳 Wallet", "wallet"),
+                                Markup.button.callback("🛠 Settings", "settings"),  
+                            ]
+                        ])
+                    }
+                )
             } else {
-                await ctx.replyWithHTML(`<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<b>Welcome to the best TRON trading bot where you can buy/sell at light speeds and secure massive profits 💰.</b>\n\n<b>💰 Wanna buy a bag, 👇 Follow the instructions below:</b>\n\n<b>1. Make sure you pass only four(4) arguments to the '/buy' command.\n\n2. These arguments must come in the folowing order ie: \n'Address of token to buy(ie: TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR)'\n'Amount of token to buy(ie: 1000)'\n'Take profit for the trade in percentage(%)'\n'Stop loss for the trade in percentage(%)'.</b>\n\n<i>Example: '/buy TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR 1000 100 10'.</i>\n\n<i>Powered by Raptor 👾\nBuilt on Tron 🤖.</i>`)
+                await ctx.replyWithHTML(
+                    `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the best <b>TRON trading bot</b> where you can buy/sell at light speeds and secure massive profits 💰.</i>\n\n<i>Make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<i>${is_user[0].pubKey}</i>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
+                    {
+                        parse_mode : "HTML",
+                        ...Markup.inlineKeyboard([
+                            [
+                                Markup.button.callback("🛒 Buy", "buy"),
+                                Markup.button.callback("🗑 Sell & Manage", "sell"),                          
+                            ],
+                            [
+                                Markup.button.callback("💳 Wallet", "wallet"),
+                                Markup.button.callback("🛠 Settings", "settings"),  
+                            ]
+                        ])
+                    }
+                )
             }
         } else {
             await ctx.reply("⚠️ Bot is only used on private chats.")
         }
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+        console.log(err)
     }
 })
 
 bot.command("buy", async ctx => {
-    try { 
-        if (ctx.message.chat.type == "private") {
-            const is_user = await isUser(ctx.message.from.id)
+    try {
+        await ctx.replyWithHTML("<i>🛒🆔 Buy Token:</i>\n\n<b>To buy a token enter a token address.</b>")
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
 
-            if(is_user) {
-                console.log(ctx.args)
+bot.action("buy", async ctx => {
+    try {
+        await ctx.replyWithHTML("<i>🛒🆔 Buy Token:</i>\n\n<b>To buy a token enter a token address.</b>")
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
 
-                if(ctx.args.length == 4) {
-                    const tokenInfo = await getTokenInfo(ctx.args[0])
-                    console.log(tokenInfo)
+bot.action("sell", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
 
-                    const timestamp = await getTimestamp()
-                    console.log(timestamp)
+        if(is_user[1]) {
+            if(is_user[0].trades.length > 0) {
+                let text = "<i>📈 Open Positions:</i>\n\n"
 
-                    const amountsOut = await getAmountsOut(ctx.args[0], ctx.args[1])
-                    console.log(amountsOut)
-
-                    const user = await getUser(ctx.message.from.id)
-                    console.log(user)
-
-                    let result = await buy(
-                        ctx.args[0],
-                        user.pubKey,
-                        user.secKey,
-                        ctx.args[1]
-                    )
-                    console.log(result, toDecimals(result[1], tokenInfo[0], false), tokenInfo[0])
-
-                    if(result[2]) {
-                        await updateUserTrades(
-                            ctx.message.from.id,
-                            ctx.args[0],
-                            "WTRX",
-                            tokenInfo[1],
-                            tokenInfo[4],
-                            ctx.args[1],
-                            toDecimals(result[1], tokenInfo[0], false),
-                            ctx.args[2],
-                            ctx.args[3],
-                            timestamp
-                        )
-    
-                        await ctx.replyWithHTML("<i>📈 Trade successfully excecuted.</i>")
+                is_user[0].trades.forEach((trade, i) => {
+                    if(!trade.sold) {
+                        text += `<b>${i + 1}.)</b><i>Token : ${trade.token}</i>\n\n<i>Price: ${trade.price} TRX</i>\n\n<i>Amount : ${trade.base_amount} ${trade.base}</i>\n\n<i>Bought : ${trade.quote_amount} ${trade.quote}</i>\n\n<i>Time : ${new Date(Number(trade.bought_at) * 1000)}</i>\n\n`
                     }
-                } else {
-                    await ctx.replyWithHTML(`<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<b>💰 Wanna buy a bag, 👇 Follow the instructions below:</b>\n\n<b>1. Make sure you pass only four(4) arguments to the '/buy' command.\n\n2. These arguments must come in the folowing order ie:\n'Address of token to buy(ie: TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR)'\n'Amount of token to buy(ie: 1000)'\n'Take profit for the trade in percentage(%)'\n'Stop loss for the trade in percentage(%)'.</b>\n\n<i>Example: '/buy TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR 1000 100 10'.</i>`)
-                }
+                })
+
+                await ctx.replyWithHTML(text)
             } else {
-                await ctx.reply("⚠️ You do not have a wallet for trading yet, Use the '/start' command to create your wallet, fund it with TRX and start trading.")
+                await ctx.replyWithHTML("<i>📈 No open positions.</i>")
             }
-        } else {
-            await ctx.reply("⚠️ Bot is only used on private chats.")
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+        console.log(err)
+    }
+})
+
+bot.action("wallet", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            const web3 = getConnection()
+            const balance = await web3.trx.getBalance(is_user[0].pubKey)
+            console.log(Number(balance), Number(balance) / 1_000_000)
+
+            await ctx.replyWithHTML(
+                `<i>💳 Your Wallet:</i>\n\n<i>🔑 Address: ${is_user[0].pubKey}</i>\n\n<i>💰 Balance: ${Number(balance) / 1_000_000} TRX</i>\n\n<i>Tap to copy the address and send TRX to deposit.</i>`,
+                {
+                    parse_mode : "HTML",
+                    ...Markup.inlineKeyboard([
+                        [
+                            Markup.button.callback("📤 Withdraw all TRX", "withdraw_all"),
+                            Markup.button.callback("📤 Withdraw X TRX", "withdraw_x"),
+                        ],
+                        [
+                            Markup.button.callback("🔃 Reset Wallet", "reset"),
+                            Markup.button.callback("🔐 Export Private Key", "export"),
+                        ],
+                    ])
+                    
+                }
+            )
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+        console.log(err)
+    }
+})
+
+bot.action("withdraw_all", async ctx => {
+    try {
+        await ctx.replyWithHTML("<i>🔁 Reply with the destination address.</i>")
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("withdraw_x", async ctx => {
+    try {
+        await ctx.replyWithHTML("<i>🔁 Reply with the amount of TRX you want to withdraw.</i>")
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("reset", async ctx => {
+    try {
+        await ctx.replyWithHTML(
+            "<i>❓ Are you sure you want to resset your <b>Wallet</b>?</i>\n\n<b>🚨 Warning:</b> <i>This action is irreversible.</i>\n\n<i>A new wallet will be created and the old one will be discarded.</i>",
+            {
+                parse_mode : "HTML",
+                ...Markup.inlineKeyboard([
+                    [Markup.button.callback("❌ Cancel", "cancel")],
+                    [Markup.button.callback("✅ Confirm", "confirm_reset")],
+                ]),
+                
+            }
+        )
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("confirm_reset", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            await ctx.replyWithHTML(`<i>🔐 Old Wallet Private Key:</i>\n\n<i>${is_user[0].secKey}</i>\n\n<i>You can now import the key into a wallet. Save this key in case you need to access the wallet again.</i>`)
+
+            const web3 = getConnection()
+            const account = await web3.createAccount()
+            console.log(account)
+
+            if(account) {
+                await ctx.replyWithHTML(`<i>🔑 Your new wallet address is:</i>\n\n<i>${account.address.base58}</i>\n\n<i>You can now send TRX to this address to begin trading.</i>`)
+
+                await updateUserWallet(
+                    ctx.chat.id,
+                    account.address.base58,
+                    account.privateKey
+                )
+            }
         }
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
     }
 })
+
+bot.action("export", async ctx => {
+    try {
+        await ctx.replyWithHTML(
+            "<i>❓🔐 Are you sure you want to export your <b>Private Key</b>?</i>",
+            {
+                parse_mode : "HTML",
+                ...Markup.inlineKeyboard([
+                    [Markup.button.callback("❌ Cancel", "cancel")],
+                    [Markup.button.callback("✅ Confirm", "confirm_export")],
+                ]),
+                
+            }
+        )
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("confirm_export", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            await ctx.replyWithHTML(`<i>🔐 Private Key:</i>\n\n<i>${is_user[0].secKey}</i>\n\n<i>You can now import the key into a wallet. Delete this message once you are done.</i>`)
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("settings", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            await ctx.replyWithHTML(
+                `<i>🛠 Settings:</i>\n\n<b>AUTO BUY${is_user[0].settings.auto_buy ? "(🟢 Enabled currently)" : "(🔴 Disabled currently)"}</b>\n<i>Buy immediately when token address is pasted. Tap buttons to toggle.</i>\n\n<b>AUTO SELL${is_user[0].settings.auto_sell ? "(🟢 Enabled currently)" : "(🔴 Disabled currently)"}</b>\n<i>Sell immediately when token price increases by 10% or 50% or 100%. Tap buttons to toggle.</i>`,
+                {
+                    parse_mode : "HTML",
+                    ...Markup.inlineKeyboard([
+                        [Markup.button.callback("TOGGLE AUTO BUY", "toggle_buy")],
+                        [
+                            Markup.button.callback("💰 Buy with 50 TRX", "set_buy_50"),
+                            Markup.button.callback("💰 Buy with 100 TRX", "set_buy_100"),
+                        ],
+                        [Markup.button.callback("💰 Buy with X TRX", "set_buy_x")],
+                        [Markup.button.callback("TOGGLE AUTO SELL", "toggle_sell")],
+                        [
+                            Markup.button.callback("📈 Sell at 50%", "set_sell_50"),
+                            Markup.button.callback("📈 Sell at 100%", "set_sell_100"),
+                        ],
+                        [Markup.button.callback("📈 Sell at X%", "set_sell_x")],
+                    ])
+                }
+            )
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+        console.log(err)
+    }
+})
+
+bot.action("toggle_buy", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            if(is_user[0].settings.auto_buy) {
+                await updateUserAutoBuySetting(ctx.chat.id, false)
+
+                await ctx.reply("🔴 Auto Buy is now disabled.")
+            } else {
+                await updateUserAutoBuySetting(ctx.chat.id, true)
+
+                await ctx.reply("🟢 Auto Buy is now enabled. Make sure you set the amount to buy with, by clicking the above buttons 🖕.")
+            }
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("set_buy_50", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            if(is_user[0].settings.auto_buy) {
+                await updateUserBuyWithSetting(ctx.chat.id, 50)
+
+                await ctx.reply("🟢 Auto Buy is set to buy with 50 TRX.")
+            }
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("set_buy_100", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            if(is_user[0].settings.auto_buy) {
+                await updateUserBuyWithSetting(ctx.chat.id, 100)
+
+                await ctx.reply("🟢 Auto Buy is set to buy with 100 TRX.")
+            }
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("set_buy_x", async ctx => {
+    try {
+        await ctx.replyWithHTML("<i>🔁 Reply with the amount of TRX you want to auto buy with.</i>")
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("toggle_sell", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            if(is_user[0].settings.auto_sell) {
+                await updateUserAutoSellSetting(ctx.chat.id, false)
+
+                await ctx.reply("🔴 Auto Sell is now disabled.")
+            } else {
+                await updateUserAutoSellSetting(ctx.chat.id, true)
+
+                await ctx.reply("🟢 Auto Sell is now enabled. Make sure you set the percent to sell at, by clicking the above buttons 🖕.")
+            }
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("set_sell_50", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            if(is_user[0].settings.auto_sell) {
+                await updateUserSellAtSetting(ctx.chat.id, 50)
+
+                await ctx.reply("🟢 Auto Sell is now set at 50% increase in price.")
+            }
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("set_sell_100", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        console.log(is_user)
+
+        if(is_user[1]) {
+            if(is_user[0].settings.auto_sell) {
+                await updateUserSellAtSetting(ctx.chat.id, 100)
+
+                await ctx.reply("🟢 Auto Sell is now set at 100% increase in price.")
+            }
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("set_sell_x", async ctx => {
+    try {
+        await ctx.replyWithHTML("<i>🔁 Reply with the amount of TRX you want to auto sell at.</i>")
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+const buyToken = async (userId, address, amount) => {
+    try {
+        const is_user = await isUser(userId)
+
+        if(is_user) {
+            const tokenInfo = await getTokenInfo(address)
+            console.log(tokenInfo)
+
+            const timestamp = await getTimestamp()
+            console.log(timestamp)
+
+            const amountsOut = await getAmountsOut(address, amount)
+            console.log(amountsOut)
+
+            let result = await buy(
+                address,
+                is_user[0].pubKey,
+                is_user[0].secKey,
+                amount
+            )
+            console.log(result, toDecimals(result[1], tokenInfo[0], false), tokenInfo[0])
+
+            if(result[2]) {
+                await updateUserTrades(
+                    userId,
+                    address,
+                    "WTRX",
+                    tokenInfo[1],
+                    tokenInfo[4],
+                    amount,
+                    toDecimals(result[1], tokenInfo[0], false),
+                    timestamp
+                )
+            }
+
+            return [true, tokenInfo, result[0], result[1], timestamp]
+        }
+    } catch (err) {
+        console.log(err)
+
+        throw err
+    }
+}
 
 bot.hears(/T/, async ctx => {
     try {
         if (ctx.message.chat.type == "private") {
             const is_user = await isUser(ctx.message.from.id)
-            
-            if(is_user) {
-                const web3 = getConnection()
-                const isAddress = web3.isAddress(ctx.message.text)
-                console.log(isAddress)
 
-                if(isAddress) {
-                    const tokenInfo = await getTokenInfo(ctx.message.text)
-                    console.log(tokenInfo)
-
-                    const user = await getUser(ctx.message.from.id)
-                    console.log(user)
-
-                    const balance = await web3.trx.getBalance(user.pubKey)
-                    console.log(Number(balance), Number(balance) / 1_000_000)
-
-                    await ctx.replyWithHTML(`<b>💎 ${tokenInfo[5]} | ${tokenInfo[1]} 💎</b>\n\n<b>📌 CA:</b><i>${ctx.message.text}</i>\n\n<b>💵 Price:</b><i>${tokenInfo[4]} TRX</i>\n\n<b>💳 Wallet Balance:</b><i>${Number(balance) / 1_000_000} TRX</i>\n\n<b>💰 Wanna buy a bag, 👇 Follow the instructions below:</b>\n\n<b>1. Make sure you pass only four(4) arguments to the '/buy' command.\n\n2. These arguments must come in the folowing order ie: \n'Address of token to buy(ie: TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR)'\n'Amount of token to buy(ie: 1000)'\n'Take profit for the trade in percentage(%)'\n'Stop loss for the trade in percentage(%)'.</b>\n\n<i>Example: '/buy TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR 1000 100 10'.</i>`)
-                } else {
-                    await ctx.reply("⚠️ The token address is invalid.")
+            if("reply_to_message" in ctx.message && ctx.message.reply_to_message.text == "🔁 Reply with the destination address.") {
+                const result = await withdraw(
+                    is_user[0].pubKey,
+                    is_user[0].secKey,
+                    ctx.message.text,
+                    -1
+                )
+    
+                if(result) {
+                    await ctx.reply(`🟢 Withdrawal successful.`)
+                }
+            } else if("reply_to_message" in ctx.message && isFinite(ctx.message.reply_to_message.text)) {
+                const result = await withdraw(
+                    is_user[0].pubKey,
+                    is_user[0].secKey,
+                    ctx.message.text,
+                    Number(ctx.message.reply_to_message.text),
+                )
+    
+                if(result) {
+                    await ctx.reply(`🟢 Withdrawal successful.`)
                 }
             } else {
-                await ctx.reply("⚠️ You do not have a wallet for trading yet, Use the '/start' command to create your wallet, fund it with TRX and start trading.")
+                console.log(ctx.session)
+                ctx.session.token = ctx.message.text
+                if(is_user) {
+                    const web3 = getConnection()
+                    const isAddress = web3.isAddress(ctx.message.text)
+                    console.log(isAddress)
+    
+                    if(isAddress) {
+                        const tokenInfo = await getTokenInfo(ctx.message.text)
+                        console.log(tokenInfo)
+    
+                        const balance = await web3.trx.getBalance(is_user[0].pubKey)
+                        console.log(Number(balance), Number(balance) / 1_000_000)
+
+                        if(is_user[0].settings.auto_buy) {
+                            const msg = await ctx.reply("📈 Buying.....")
+                            console.log(msg)
+
+                            const bought = await buyToken(ctx.chat.id, ctx.message.text, Number(is_user[0].settings.buy_with))
+
+                            if(bought[0]) {
+                                await ctx.editMessageText(
+                                    `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${bought[1][4]} TRX</i>\n\n<i>Amount : ${Number(bought[2]) / 1_000_000} TRX</i>\n\n<i>Bought : ${bought[2]} ${bought[1][1]}</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                                    {
+                                        parse_mode: "HTML",
+                                        message_id: msg.message_id
+                                    }
+                                )
+                            }
+                        } else {
+                            await ctx.replyWithHTML(
+                                `<b>💎 ${tokenInfo[5]} | ${tokenInfo[1]} 💎</b>\n\n<b>📌 CA:</b><i>${ctx.message.text}</i>\n\n<b>💵 Price:</b><i>${tokenInfo[4]} TRX</i>\n\n<b>💳 Wallet Balance:</b><i>${Number(balance) / 1_000_000} TRX</i>\n\n<b>💰 Wanna buy a bag, 👇 click ant button below:</b>`,
+                                {
+                                    parse_mode : "HTML",
+                                    ...Markup.inlineKeyboard([
+                                        [Markup.button.callback("❌ Cancel", "cancel")],
+                                        [
+                                            Markup.button.callback("💰 Buy with 50 TRX", "buy_50"),
+                                            Markup.button.callback("💰 Buy with 100 TRX", "buy_100"),
+                                        ],
+                                        [Markup.button.callback("💰 Buy with X TRX", "buy_x")],
+                                    ]),
+                                    
+                                }
+                            )
+                        }
+                    } else {
+                        await ctx.reply("⚠️ The token address is invalid.")
+                    }
+                } else {
+                    await ctx.reply("⚠️ You do not have a wallet for trading yet, Use the '/start' command to create your wallet, fund it with TRX and start trading.")
+                }
             }
         } else {
             await ctx.reply("⚠️ Bot is only used on private chats.")
         }
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+        console.log(err)
+    }
+})
+
+bot.action("buy_50", async ctx => {
+    try {
+        const msg = await ctx.reply("📈 Buying.....")
+        console.log(msg)
+
+        const bought = await buyToken(ctx.chat.id, ctx.session.token, 50)
+
+        if(bought[0]) {
+            await ctx.editMessageText(
+                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${bought[1][4]} TRX</i>\n\n<i>Amount : ${Number(bought[2]) / 1_000_000} TRX</i>\n\n<i>Bought : ${bought[2]} ${bought[1][1]}</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                {
+                    parse_mode: "HTML",
+                    message_id: msg.message_id
+                }
+            )
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("buy_100", async ctx => {
+    try {
+        const msg = await ctx.reply("📈 Buying.....")
+        console.log(msg)
+
+        const bought = await buyToken(ctx.chat.id, ctx.session.token, 100)
+
+        if(bought[0]) {
+            await ctx.editMessageText(
+                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${bought[1][4]} TRX</i>\n\n<i>Amount : ${Number(bought[2]) / 1_000_000} TRX</i>\n\n<i>Bought : ${bought[2]} ${bought[1][1]}</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                {
+                    parse_mode: "HTML",
+                    message_id: msg.message_id
+                }
+            )
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.action("buy_x", async ctx => {
+    try {
+        await ctx.replyWithHTML("<i>🔁 Reply with the amount of TRX you want to buy with.</i>")
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.on("message", async ctx => {
+    try {
+        if("reply_to_message" in ctx.message) {
+            const text = ctx.message.reply_to_message.text
+    
+            if(text == "🔁 Reply with the amount of TRX you want to withdraw.") {
+                console.log(ctx.message.text)
+                await ctx.sendMessage(`🖕 Reply to the above text with the destination address.`)
+            }
+    
+            if(text == "🔁 Reply with the amount of TRX you want to buy with.") {
+                console.log(ctx.chat.id, ctx.message.text, ctx.session.token)
+                
+                const msg = await ctx.reply("📈 Buying.....")
+                console.log(msg)
+                
+                const bought = await buyToken(ctx.chat.id, ctx.session.token, Number(ctx.message.text))
+    
+                if(bought[0]) {
+                    await ctx.editMessageText(
+                        `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${bought[1][4]} TRX</i>\n\n<i>Amount : ${Number(bought[2]) / 1_000_000} TRX</i>\n\n<i>Bought : ${bought[2]} ${bought[1][1]}</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                        {
+                            parse_mode: "HTML",
+                            message_id: msg.message_id
+                        }
+                    )
+                }
+            }
+            
+            if(text == "🔁 Reply with the amount of TRX you want to auto buy with.") {
+                console.log(ctx.message.text)
+                const is_user = await isUser(ctx.chat.id)
+                console.log(is_user)
+        
+                if(is_user[1]) {
+                    if(is_user[0].settings.auto_buy) {
+                        await updateUserBuyWithSetting(ctx.chat.id, Number(ctx.message.text))
+        
+                        await ctx.reply(`🟢 Auto Buy is set to buy with ${ctx.message.text} TRX.`)
+                    }
+                }
+            } 
+            
+            if(text == "🔁 Reply with the amount of TRX you want to auto sell at.") {
+                console.log(ctx.message.text)
+                const is_user = await isUser(ctx.chat.id)
+                console.log(is_user)
+        
+                if(is_user[1]) {
+                    if(is_user[0].settings.auto_sell) {
+                        await updateUserSellAtSetting(ctx.chat.id, Number(ctx.message.text))
+        
+                        await ctx.reply(`🟢 Auto Sell is now set at ${ctx.message.text}% increase in price.`)
+                    }
+                }
+            } 
+            
+            if(text == "🖕 Reply to the above text with the destination address.") {
+                console.log(ctx.message.text, ctx.message.reply_to_message.text)
+                const is_user = await isUser(ctx.chat.id)
+                console.log(is_user)
+        
+                if(is_user[1]) {
+                    const result = await withdraw(
+                        is_user[0].pubKey,
+                        is_user[0].secKey,
+                        ctx.message.text,
+                        Number(ctx.message.reply_to_message.text)
+                    )
+        
+                    if(result) {
+                        await ctx.reply(`🟢 Withdrawal successful.`)
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+
+        console.log(err)
+    }
+})
+
+bot.action("cancel", async ctx => {
+    try {
+        console.log("cancel", ctx.callbackQuery.message.message_id)
+        await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+        console.log(err)
     }
 })
 
@@ -141,6 +683,8 @@ connectDB()
 
 bot.launch()
 
-setInterval(() => {
-    monitorPrices()
-}, 1000 * 60 * 5);
+monitorPrices()
+
+// setInterval(() => {
+//     monitorPrices()
+// }, 1000 * 60 * 15);

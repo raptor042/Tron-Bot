@@ -42,7 +42,7 @@ export const getTokenInfo = async (address) => {
         const factory = await web3.contract(SunSwapV2FactoryABI, SunSwapV2Factory)
 
         const pair = await factory.getPair(address, WTRX).call()
-        console.log(pair, web3.address.fromHex(pair))
+        console.log(web3.address.fromHex(pair))
 
         const token = await web3.contract(PairERC20ABI, address)
         const _pair = await web3.contract(PairERC20ABI, web3.address.fromHex(pair))
@@ -97,9 +97,9 @@ export const approve = async (address, pub, sec, amount) => {
         const token = await web3.contract(PairERC20ABI, address)
 
         const allowance = await token.allowance(pub, SunSwapV2Router).call()
-        console.log(Number(allowance))
+        console.log(Number(allowance), amount)
 
-        const result = await token.approve(SunSwapV2Router, amount + 1000).send({
+        const result = await token.approve(SunSwapV2Router, `${amount}`).send({
             feeLimit: 100_000_000,
             callValue: 0,
             shouldPollResponse: true
@@ -148,10 +148,10 @@ export const sell = async (address, pub, sec, amount) => {
         const router = await web3.contract(SunSwapV2RouterABI, SunSwapV2Router)
 
         const deadline = await getTimestamp()
-        console.log(deadline)
+        console.log(deadline, amount)
 
         const result = await router.swapExactTokensForETH(
-            amount,
+            `${amount}`,
             0,
             [address, WTRX],
             pub,
@@ -164,6 +164,28 @@ export const sell = async (address, pub, sec, amount) => {
         console.log(result)
 
         return [Number(result[0][0]), Number(result[0][1]), true]
+    } catch (err) {
+        console.log(err)
+
+        throw err
+    }
+}
+
+export const withdraw = async (pub, sec, to, amount) => {
+    try {
+        const web3 = getConnection(sec)
+        const balance = await web3.trx.getBalance(pub)
+        console.log(balance)
+        
+        if(amount < 0) {
+            const result = await web3.transactionBuilder.sendTrx(to, balance, pub)
+            console.log(result)
+        } else {
+            const result = await web3.transactionBuilder.sendTrx(to, (amount * 1_000_000), pub)
+            console.log(result)
+        }
+
+        return true
     } catch (err) {
         console.log(err)
 

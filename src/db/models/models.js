@@ -13,14 +13,18 @@ const UserSchema = new Schema({
             price: Number,
             base_amount: Number,
             quote_amount: Number,
-            take_profit: Number,
-            stop_loss: Number,
             pNl: Number,
             bought_at: Number,
             sold_at: Number,
             sold: Boolean
         }
-    ]
+    ],
+    settings: {
+        buy_with: Number,
+        auto_buy: Boolean,
+        sell_at: Number,
+        auto_sell: Boolean
+    }
 })
 
 export const UserModel = model("User", UserSchema)
