@@ -89,7 +89,42 @@ bot.command("buy", async ctx => {
                         await ctx.replyWithHTML("<i>📈 Trade successfully excecuted.</i>")
                     }
                 } else {
-                    await ctx.replyWithHTML(`<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<b>Wanna start an trading, Follow the instructions below:</b>\n\n<b>1. Make sure you pass only four(4) arguments to the '/buy' command.\n\n2. These arguments must come in the folowing order ie: 'Address of token to buy(ie: TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR)', 'Amount of token to buy(ie: 1000)', 'Take profit for the trade in percentage(%)' and 'Stop loss for the trade in percentage(%)'.</b>\n\n<i>Example: '/buy TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR 1000 100 10'.</i>`)
+                    await ctx.replyWithHTML(`<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<b>💰 Wanna buy a bag, 👇 Follow the instructions below:</b>\n\n<b>1. Make sure you pass only four(4) arguments to the '/buy' command.\n\n2. These arguments must come in the folowing order ie:\n'Address of token to buy(ie: TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR)'\n'Amount of token to buy(ie: 1000)'\n'Take profit for the trade in percentage(%)'\n'Stop loss for the trade in percentage(%)'.</b>\n\n<i>Example: '/buy TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR 1000 100 10'.</i>`)
+                }
+            } else {
+                await ctx.reply("⚠️ You do not have a wallet for trading yet, Use the '/start' command to create your wallet, fund it with TRX and start trading.")
+            }
+        } else {
+            await ctx.reply("⚠️ Bot is only used on private chats.")
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+    }
+})
+
+bot.hears(/T/, async ctx => {
+    try {
+        if (ctx.message.chat.type == "private") {
+            const is_user = await isUser(ctx.message.from.id)
+            
+            if(is_user) {
+                const web3 = getConnection()
+                const isAddress = web3.isAddress(ctx.message.text)
+                console.log(isAddress)
+
+                if(isAddress) {
+                    const tokenInfo = await getTokenInfo(ctx.message.text)
+                    console.log(tokenInfo)
+
+                    const user = await getUser(ctx.message.from.id)
+                    console.log(user)
+
+                    const balance = await web3.trx.getBalance(user.pubKey)
+                    console.log(Number(balance), Number(balance) / 1_000_000)
+
+                    await ctx.replyWithHTML(`<b>💎 ${tokenInfo[5]} | ${tokenInfo[1]} 💎</b>\n\n<b>📌 CA:</b><i>${ctx.message.text}</i>\n\n<b>💵 Price:</b><i>${tokenInfo[4]} TRX</i>\n\n<b>💳 Wallet Balance:</b><i>${Number(balance) / 1_000_000} TRX</i>\n\n<b>💰 Wanna buy a bag, 👇 Follow the instructions below:</b>\n\n<b>1. Make sure you pass only four(4) arguments to the '/buy' command.\n\n2. These arguments must come in the folowing order ie: \n'Address of token to buy(ie: TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR)'\n'Amount of token to buy(ie: 1000)'\n'Take profit for the trade in percentage(%)'\n'Stop loss for the trade in percentage(%)'.</b>\n\n<i>Example: '/buy TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR 1000 100 10'.</i>`)
+                } else {
+                    await ctx.reply("⚠️ The token address is invalid.")
                 }
             } else {
                 await ctx.reply("⚠️ You do not have a wallet for trading yet, Use the '/start' command to create your wallet, fund it with TRX and start trading.")

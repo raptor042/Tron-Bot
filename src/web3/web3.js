@@ -46,6 +46,8 @@ export const getTokenInfo = async (address) => {
         const token = await web3.contract(PairERC20ABI, address)
         const _pair = await web3.contract(PairERC20ABI, web3.address.fromHex(pair))
         
+        const name = await token.name().call()
+        console.log(name)
         const symbol = await token.symbol().call()
         console.log(symbol)
         const decimals = await token.decimals().call()
@@ -64,7 +66,7 @@ export const getTokenInfo = async (address) => {
             price = Number(reserves[1]) / Number(reserves[0])
         }
 
-        return [Number(decimals), symbol, web3.address.fromHex(token0), web3.address.fromHex(token1), price]
+        return [Number(decimals), symbol, web3.address.fromHex(token0), web3.address.fromHex(token1), price, name]
     } catch (err) {
         console.log(err)
 
