@@ -1,6 +1,7 @@
 import TronWeb from "tronweb"
 import { config } from "dotenv"
 import { PairERC20ABI, SunSwapV2Factory, SunSwapV2FactoryABI, SunSwapV2Router, SunSwapV2RouterABI, WTRX } from "./constants.js"
+import { toDecimals } from "../utils.js"
 
 config()
 
@@ -61,9 +62,9 @@ export const getTokenInfo = async (address) => {
 
         let price
         if(web3.address.toHex(WTRX) == token0) {
-            price = Number(reserves[0]) / Number(reserves[1])
+            price = Number(reserves[0]) / toDecimals(Number(reserves[1]), (Number(decimals) - 6), false)
         } else {
-            price = Number(reserves[1]) / Number(reserves[0])
+            price = Number(reserves[1]) / toDecimals(Number(reserves[0]), (Number(decimals) - 6), false)
         }
 
         return [Number(decimals), symbol, web3.address.fromHex(token0), web3.address.fromHex(token1), price, name]
