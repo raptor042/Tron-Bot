@@ -590,7 +590,7 @@ bot.action("buy_50", async ctx => {
             }, 1000);
         }
     } catch (err) {
-        await ctx.replyWithHTML(`<b>🚫 Make sure you have enough TRX/Energy/Bandwidth for this transaction.</b>`)
+        await ctx.replyWithHTML(`<b>🚫 Make sure you have enough TRX/Energy/Bandwidth for this transaction.</b>\n\n<i>Please we do not support SunPump meme coins currently(coming soon).</i>`)
         console.log(err)
     }
 })
@@ -616,7 +616,7 @@ bot.action("buy_100", async ctx => {
             }, 1000);
         }
     } catch (err) {
-        await ctx.replyWithHTML(`<b>🚫 Make sure you have enough TRX/Energy/Bandwidth for this transaction.</b>`)
+        await ctx.replyWithHTML(`<b>🚫 Make sure you have enough TRX/Energy/Bandwidth for this transaction.</b>\n\n<i>Please we do not support SunPump meme coins currently(coming soon).</i>`)
         console.log(err)
     }
 })
@@ -893,7 +893,7 @@ bot.hears(/T/, async ctx => {
             await ctx.reply("⚠️ Bot is only used on private chats.")
         }
     } catch (err) {
-        await ctx.replyWithHTML(`<b>🚫 Make sure you have enough TRX/Energy/Bandwidth for this transaction.</b>`)
+        await ctx.replyWithHTML(`<b>🚫 Make sure you have enough TRX/Energy/Bandwidth for this transaction.</b>\n\n<i>Please we do not support SunPump meme coins currently(coming soon).</i>`)
         console.log(err)
     }
 })
@@ -986,7 +986,7 @@ bot.on("message", async ctx => {
             }
         }
     } catch (err) {
-        await ctx.replyWithHTML(`<b>🚫 Make sure you have enough TRX/Energy/Bandwidth for this transaction.</b>`)
+        await ctx.replyWithHTML(`<b>🚫 Make sure you have enough TRX/Energy/Bandwidth for this transaction.</b>\n\n<i>Please we do not support SunPump meme coins currently(coming soon).</i>`)
 
         console.log(err)
     }
