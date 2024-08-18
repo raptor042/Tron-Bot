@@ -49,18 +49,24 @@ export const getTokenInfo = async (address) => {
         
         const name = await token.name().call()
         console.log(name)
+
         const symbol = await token.symbol().call()
         console.log(symbol)
+
         const decimals = await token.decimals().call()
         console.log(Number(decimals))
+
         const token0 = await _pair.token0().call()
         console.log(token0)
+
         const token1 = await _pair.token1().call()
         console.log(token1)
+
         const reserves = await _pair.getReserves().call()
         console.log(reserves)
 
         let price
+
         if(web3.address.toHex(WTRX) == token0) {
             price = Number(reserves[0]) / toDecimals(Number(reserves[1]), (Number(decimals) - 6), false)
         } else {
@@ -102,7 +108,7 @@ export const approve = async (address, pub, sec, amount) => {
         const result = await token.approve(SunSwapV2Router, `${amount}`).send({
             feeLimit: 100_000_000,
             callValue: 0,
-            shouldPollResponse: true
+            shouldPollResponse: false
         })
         console.log(result)
 
@@ -130,7 +136,7 @@ export const buy = async (address, pub, sec, amount) => {
         ).send({
             feeLimit: 100_000_000,
             callValue: amount * (1_000_000),
-            shouldPollResponse: true
+            shouldPollResponse: false
         })
         console.log(result)
 
@@ -159,7 +165,7 @@ export const sell = async (address, pub, sec, amount) => {
         ).send({
             feeLimit: 100_000_000,
             callValue: 0,
-            shouldPollResponse: true
+            shouldPollResponse: false
         })
         console.log(result)
 
@@ -171,17 +177,63 @@ export const sell = async (address, pub, sec, amount) => {
     }
 }
 
+// export const withdraw = async (pub, sec, to, amount) => {
+//     try {
+//         const web3 = getConnection(sec)
+//         const balance = await web3.trx.getBalance(pub)
+//         console.log({balance, to, pub, hex_to: web3.address.toHex(to), from: web3.address.toHex(pub)})
+        
+//         if(amount < 0) {
+//             const result = await web3.transactionBuilder.sendTrx(web3.address.toHex(to), balance, web3.address.toHex(pub))
+//             console.log(result)
+//         } else {
+//             const result = await web3.transactionBuilder.sendTrx(web3.address.toHex(to), (amount * 1_000_000), web3.address.toHex(pub))
+//             console.log(result)
+//         }
+
+//         return true
+//     } catch (err) {
+//         console.log(err)
+
+//         throw err
+//     }
+// }
+
 export const withdraw = async (pub, sec, to, amount) => {
     try {
         const web3 = getConnection(sec)
-        const balance = await web3.trx.getBalance(pub)
-        console.log({balance, to, pub, hex_to: web3.address.toHex(to), from: web3.address.toHex(pub)})
+        const token = await web3.contract(PairERC20ABI, WTRX)
+
+        const decimals = await token.decimals().call()
+        console.log(Number(decimals))
+        
+        const supply = await token.totalSupply().call()
+        console.log(Number(supply))
+
+        const balance = await token.balanceOf(pub).call()
+        console.log(Number(balance))
         
         if(amount < 0) {
-            const result = await web3.transactionBuilder.sendTrx(web3.address.toHex(to), balance, web3.address.toHex(pub))
+            const result = await token.transferFrom(
+                pub,
+                to,
+                balance
+            ).send({
+                feeLimit: 100_000_000,
+                callValue: 0,
+                shouldPollResponse: false
+            })
             console.log(result)
         } else {
-            const result = await web3.transactionBuilder.sendTrx(web3.address.toHex(to), (amount * 1_000_000), web3.address.toHex(pub))
+            const result = await token.transferFrom(
+                pub,
+                to,
+                amount * (10 ** decimals)
+            ).send({
+                feeLimit: 100_000_000,
+                callValue: 0,
+                shouldPollResponse: false
+            })
             console.log(result)
         }
 
