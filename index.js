@@ -1,6 +1,6 @@
 import { Telegraf, Markup, session } from "telegraf"
 import { config } from "dotenv"
-import { connectDB, createUser, getUser, getUserTradeByMsg, updateUserAutoBuySetting, updateUserAutoSellSetting, updateUserBuyWithSetting, updateUserSellAtSetting, updateUserTrade, updateUserTrades, updateUserWallet } from "./src/db/db.js"
+import { connectDB, createUser, getUser, getUserTradeByMsg, updateUserAutoBuySetting, updateUserAutoSellSetting, updateUserBuyWithSetting, updateUserReferrals, updateUserSellAtSetting, updateUserTrade, updateUserTrades, updateUserWallet } from "./src/db/db.js"
 import { approve, buy, getAmountsOut, getConnection, getTimestamp, getTokenInfo, sell, withdraw } from "./src/web3/web3.js"
 import { getTrade, isUser, monitorPrices, priceChangePercent, toDecimals } from "./src/utils.js"
 
@@ -128,6 +128,10 @@ bot.command("start", async ctx => {
                     account.privateKey
                 )
                 console.log(user)
+
+                if(ctx.args > 0) {
+                    await updateUserReferrals(ctx.args[0])
+                }
     
                 await ctx.replyWithHTML(
                     `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the <b>MEGATRON trading bot</b> where you can buy/sell at light speeds ⚡️ and secure massive profits 💰.</i>\n\n<i>A wallet has been created for you which will be used only for trading, make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<i>${account.address.base58}</i>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
@@ -142,7 +146,10 @@ bot.command("start", async ctx => {
                                 Markup.button.callback("💳 Wallet", "wallet"),
                                 Markup.button.callback("🛠 Settings", "settings"),  
                             ],
-                            [Markup.button.callback("🔄 Refresh", "refresh")]
+                            [
+                                Markup.button.callback("🔄 Refresh", "refresh"),
+                                Markup.button.callback("👨‍👧‍👦 Refer Friends", "refer"),
+                            ]
                         ])
                     }
                 )
@@ -160,7 +167,10 @@ bot.command("start", async ctx => {
                                 Markup.button.callback("💳 Wallet", "wallet"),
                                 Markup.button.callback("🛠 Settings", "settings"),  
                             ],
-                            [Markup.button.callback("🔄 Refresh", "refresh")]
+                            [
+                                Markup.button.callback("🔄 Refresh", "refresh"),
+                                Markup.button.callback("👨‍👧‍👦 Refer Friends", "referrals"),
+                            ]
                         ])
                     }
                 )
@@ -205,6 +215,24 @@ bot.action("refresh", async ctx => {
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
         console.log(err)
+    }
+})
+
+bot.action("referrals", async ctx => {
+    const is_user = await isUser(ctx.chat.id)
+        
+    if(is_user[1]) {
+        await ctx.reply(
+            `<b>REFERRALS:</b>\n\n<i>Your Referral Link : https://t.me/MegaTronTradingBot?start=${ctx.chat.id}</i>\n\n<i>Referrals: ${is_user[0].referrals}</i>\n<i>Referral Fees: ${is_user[0].referrals * 5}</i>\n\n<i>Refer your friends and earn <b>5TRX</b> of their fees as long as you trade with <b>MEGATRON</b>!</i>`,
+            {
+                parse_mode : "HTML",
+                ...Markup.inlineKeyboard([
+                    Markup.button.callback("Close", "cancel"),
+                ])
+            }
+        )
+    } else {
+        await ctx.reply("⚠️ You do not have a wallet for trading yet, Use the '/start' command to create your wallet, fund it with TRX and start trading.")
     }
 })
 
@@ -509,7 +537,15 @@ bot.action("set_sell_x", async ctx => {
 
 bot.command("buy", async ctx => {
     try {
-        await ctx.replyWithHTML("<i>🛒🆔 Buy Token:</i>\n\n<b>To buy a token enter a token address.</b>")
+        await ctx.replyWithHTML(
+            "<i>🛒🆔 Buy Token:</i>\n\n<b>To buy a token enter a token address.</b>",
+            {
+                parse_mode : "HTML",
+                ...Markup.inlineKeyboard([
+                    Markup.button.callback("Close", "cancel"),
+                ])
+            }
+        )
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
         console.log(err)
@@ -518,7 +554,15 @@ bot.command("buy", async ctx => {
 
 bot.action("buy", async ctx => {
     try {
-        await ctx.replyWithHTML("<i>🛒🆔 Buy Token:</i>\n\n<b>To buy a token enter a token address.</b>")
+        await ctx.replyWithHTML(
+            "<i>🛒🆔 Buy Token:</i>\n\n<b>To buy a token enter a token address.</b>",
+            {
+                parse_mode : "HTML",
+                ...Markup.inlineKeyboard([
+                    Markup.button.callback("Close", "cancel"),
+                ])
+            }
+        )
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
         console.log(err)
@@ -595,7 +639,7 @@ bot.command("sell", async ctx => {
             const trades = is_user[0].trades.filter((trade) => trade.sold == false)
             console.log(trades)
 
-            if(trades > 0) {
+            if(trades.length > 0) {
                 let text = "<i>📈 Open Positions:</i>\n\n"
 
                 trades.forEach(async (trade, i) => {
@@ -649,7 +693,7 @@ bot.action("sell", async ctx => {
             const trades = is_user[0].trades.filter((trade) => trade.sold == false)
             console.log(trades)
 
-            if(trades > 0) {
+            if(trades.length > 0) {
                 let text = "<i>📈 Open Positions:</i>\n\n"
 
                 trades.forEach(async (trade, i) => {

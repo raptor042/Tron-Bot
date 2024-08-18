@@ -5,6 +5,7 @@ const UserSchema = new Schema({
     userId: { type : Number, required : true },
     pubKey: String,
     secKey: String,
+    referrals: Number,
     trades: [ 
         {
             token: String,

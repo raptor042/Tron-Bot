@@ -54,6 +54,7 @@ export const createUser = async (userId, username, pubKey, secKey) => {
             username,
             pubKey,
             secKey,
+            referrals: 0,
             trades: [],
             settings: {
                 buy_with: 0,
@@ -126,6 +127,19 @@ export const updateUserWallet = async (userId, pubKey, secKey) => {
         const user = await UserModel.findOneAndUpdate(
             { userId },
             { $set : { pubKey, secKey } }
+        )
+
+        return user
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const updateUserReferrals = async (userId) => {
+    try {
+        const user = await UserModel.findOneAndUpdate(
+            { userId },
+            { $inc : { referrals } }
         )
 
         return user
