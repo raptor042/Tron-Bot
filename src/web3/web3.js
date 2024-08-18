@@ -178,10 +178,10 @@ export const withdraw = async (pub, sec, to, amount) => {
         console.log(balance)
         
         if(amount < 0) {
-            const result = await web3.transactionBuilder.sendTrx(to, balance, pub)
+            const result = await web3.transactionBuilder.sendTrx(to, balance)
             console.log(result)
         } else {
-            const result = await web3.transactionBuilder.sendTrx(to, (amount * 1_000_000), pub)
+            const result = await web3.transactionBuilder.sendTrx(to, (amount * 1_000_000))
             console.log(result)
         }
 

@@ -8,6 +8,21 @@ export const isUser = async (userId) => {
     return user ? [user, true] : [user, false]
 }
 
+export const getTrade = async (userId, token) => {
+    const user = await getUser(userId)
+    console.log(user)
+
+    let _trade
+
+    user.trades.forEach(trade => {
+        if(trade.token == token && !trade.sold) {
+            _trade = trade
+        }
+    })
+
+    return _trade
+}
+
 export const toDecimals = (value, decimals, overflow) => {
     let result
     if(overflow) {
@@ -61,7 +76,7 @@ export const monitorPrices = async () => {
                             trade.token,
                             user.pubKey,
                             user.secKey,
-                            toDecimals(trade.quote_amount, tokenInfo[0], true).toLocaleString("fullwide", { useGrouping: false })
+                            trade.quote_amount
                         )
 
                         if(approved) {
@@ -69,7 +84,7 @@ export const monitorPrices = async () => {
                                 trade.token,
                                 user.pubKey,
                                 user.secKey,
-                                toDecimals(trade.quote_amount, tokenInfo[0], true).toLocaleString("fullwide", { useGrouping: false })
+                                trade.quote_amount
                             )
                             console.log(result)
         
