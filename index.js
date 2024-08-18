@@ -646,7 +646,7 @@ bot.command("sell", async ctx => {
                     const tokenInfo = await getTokenInfo(trade.token)
                     console.log(tokenInfo)
 
-                    text += `<b>${i + 1}.)</b><i>Token : ${trade.token}</i>\n\n<i>Price: ${Number(trade.price).toFixed(6)} TRX</i>\n\n<i>Amount : ${Number(trade.base_amount).toFixed(2)} ${trade.base}</i>\n\n<i>Bought : ${toDecimals(trade.quote_amount, tokenInfo[0], false).toFixed(2)} ${trade.quote}</i>\n\n<i>Time : ${new Date(Number(trade.bought_at) * 1000)}</i>\n\n`
+                    text += `<b>${i + 1}.)</b><i>Token : <code>${trade.token}</code></i>\n\n<i>Price: ${Number(trade.price).toFixed(6)} TRX</i>\n\n<i>Amount : ${Number(trade.base_amount).toFixed(2)} ${trade.base}</i>\n\n<i>Bought : ${toDecimals(trade.quote_amount, tokenInfo[0], false).toFixed(2)} ${trade.quote}</i>\n\n<i>Time : ${new Date(Number(trade.bought_at) * 1000)}</i>\n\n`
                 })
 
                 setTimeout(async () => {
@@ -700,7 +700,7 @@ bot.action("sell", async ctx => {
                     const tokenInfo = await getTokenInfo(trade.token)
                     console.log(tokenInfo)
 
-                    text += `<b>${i + 1}.)</b><i>Token : ${trade.token}</i>\n\n<i>Price: ${Number(trade.price).toFixed(6)} TRX</i>\n\n<i>Amount : ${Number(trade.base_amount).toFixed(2)} ${trade.base}</i>\n\n<i>Bought : ${toDecimals(trade.quote_amount, tokenInfo[0], false).toFixed(2)} ${trade.quote}</i>\n\n<i>Time : ${new Date(Number(trade.bought_at) * 1000)}</i>\n\n`
+                    text += `<b>${i + 1}.)</b><i>Token : <code>${trade.token}</code></i>\n\n<i>Price: ${Number(trade.price).toFixed(6)} TRX</i>\n\n<i>Amount : ${Number(trade.base_amount).toFixed(2)} ${trade.base}</i>\n\n<i>Bought : ${toDecimals(trade.quote_amount, tokenInfo[0], false).toFixed(2)} ${trade.quote}</i>\n\n<i>Time : ${new Date(Number(trade.bought_at) * 1000)}</i>\n\n`
                 })
 
                 setTimeout(async () => {
