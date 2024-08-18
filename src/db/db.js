@@ -139,7 +139,7 @@ export const updateUserReferrals = async (userId) => {
     try {
         const user = await UserModel.findOneAndUpdate(
             { userId },
-            { $inc : { referrals } }
+            { $inc : { referrals: 1 } }
         )
 
         return user
