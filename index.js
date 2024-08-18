@@ -223,7 +223,7 @@ bot.action("referrals", async ctx => {
         
     if(is_user[1]) {
         await ctx.reply(
-            `<b>REFERRALS:</b>\n\n<i>Your Referral Link : https://t.me/MegaTronTradingBot?start=${ctx.chat.id}</i>\n\n<i>Referrals: ${is_user[0].referrals}</i>\n<i>Referral Fees: ${is_user[0].referrals * 5}</i>\n\n<i>Refer your friends and earn <b>5TRX</b> of their fees as long as you trade with <b>MEGATRON</b>!</i>`,
+            `<b>👨‍👧‍👦 REFERRALS:</b>\n\n<i>Your Referral Link : https://t.me/MegaTronTradingBot?start=${ctx.chat.id}</i>\n\n<i>👥 Referrals: ${is_user[0].referrals}</i>\n<i>💰 Referral Fees: ${is_user[0].referrals * 5} TRX</i>\n\n<i>Refer your friends and earn <b>5 TRX</b> of their fees as long as you trade with <b>MEGATRON</b>!</i>`,
             {
                 parse_mode : "HTML",
                 ...Markup.inlineKeyboard([

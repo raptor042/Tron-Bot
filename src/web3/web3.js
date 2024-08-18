@@ -177,63 +177,17 @@ export const sell = async (address, pub, sec, amount) => {
     }
 }
 
-// export const withdraw = async (pub, sec, to, amount) => {
-//     try {
-//         const web3 = getConnection(sec)
-//         const balance = await web3.trx.getBalance(pub)
-//         console.log({balance, to, pub, hex_to: web3.address.toHex(to), from: web3.address.toHex(pub)})
-        
-//         if(amount < 0) {
-//             const result = await web3.transactionBuilder.sendTrx(web3.address.toHex(to), balance, web3.address.toHex(pub))
-//             console.log(result)
-//         } else {
-//             const result = await web3.transactionBuilder.sendTrx(web3.address.toHex(to), (amount * 1_000_000), web3.address.toHex(pub))
-//             console.log(result)
-//         }
-
-//         return true
-//     } catch (err) {
-//         console.log(err)
-
-//         throw err
-//     }
-// }
-
 export const withdraw = async (pub, sec, to, amount) => {
     try {
         const web3 = getConnection(sec)
-        const token = await web3.contract(PairERC20ABI, WTRX)
-
-        const decimals = await token.decimals().call()
-        console.log(Number(decimals))
-        
-        const supply = await token.totalSupply().call()
-        console.log(Number(supply))
-
-        const balance = await token.balanceOf(pub).call()
-        console.log(Number(balance))
+        const balance = await web3.trx.getBalance(pub)
+        console.log({balance, to, pub, hex_to: web3.address.toHex(to), from: web3.address.toHex(pub)})
         
         if(amount < 0) {
-            const result = await token.transferFrom(
-                pub,
-                to,
-                balance
-            ).send({
-                feeLimit: 100_000_000,
-                callValue: 0,
-                shouldPollResponse: false
-            })
+            const result = await web3.transactionBuilder.sendTrx(web3.address.toHex(to), balance, web3.address.toHex(pub))
             console.log(result)
         } else {
-            const result = await token.transferFrom(
-                pub,
-                to,
-                amount * (10 ** decimals)
-            ).send({
-                feeLimit: 100_000_000,
-                callValue: 0,
-                shouldPollResponse: false
-            })
+            const result = await web3.transactionBuilder.sendTrx(web3.address.toHex(to), (amount * 1_000_000), web3.address.toHex(pub))
             console.log(result)
         }
 
