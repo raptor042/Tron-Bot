@@ -108,7 +108,7 @@ export const approve = async (address, pub, sec, amount) => {
         const result = await token.approve(SunSwapV2Router, `${amount}`).send({
             feeLimit: 100_000_000,
             callValue: 0,
-            shouldPollResponse: false
+            shouldPollResponse: true
         })
         console.log(result)
 
@@ -136,7 +136,7 @@ export const buy = async (address, pub, sec, amount) => {
         ).send({
             feeLimit: 100_000_000,
             callValue: amount * (1_000_000),
-            shouldPollResponse: false
+            shouldPollResponse: true
         })
         console.log(result)
 
@@ -165,7 +165,7 @@ export const sell = async (address, pub, sec, amount) => {
         ).send({
             feeLimit: 100_000_000,
             callValue: 0,
-            shouldPollResponse: false
+            shouldPollResponse: true
         })
         console.log(result)
 

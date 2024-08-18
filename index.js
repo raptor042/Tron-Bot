@@ -204,7 +204,7 @@ bot.action("refresh", async ctx => {
 
             if(bought[0]) {
                 await ctx.editMessageText(
-                    `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${trades[0].token}</i>\n\n<i>Price: ${Number(tokenInfo[4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${trades[0].base_amount.toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(trades[0].quote_amount, tokenInfo[0], false).toFixed(2)} ${trades[0].quote}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(trades[0].bought_at * 1000)}</i>`,
+                    `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : <code>${trades[0].token}</code></i>\n\n<i>Price: ${Number(tokenInfo[4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${trades[0].base_amount.toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(trades[0].quote_amount, tokenInfo[0], false).toFixed(2)} ${trades[0].quote}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(trades[0].bought_at * 1000)}</i>`,
                     {
                         parse_mode: "HTML",
                         message_id: pinned_msg
@@ -291,7 +291,7 @@ bot.action("withdraw_x", async ctx => {
 bot.action("reset", async ctx => {
     try {
         await ctx.replyWithHTML(
-            "<i>❓ Are you sure you want to resset your <b>Wallet</b>?</i>\n\n<b>🚨 Warning:</b> <i>This action is irreversible.</i>\n\n<i>A new wallet will be created and the old one will be discarded.</i>",
+            "<i>❓ Are you sure you want to reset your <b>Wallet</b>?</i>\n\n<b>🚨 Warning:</b> <i>This action is irreversible.</i>\n\n<i>A new wallet will be created and the old one will be discarded.</i>",
             {
                 parse_mode : "HTML",
                 ...Markup.inlineKeyboard([
@@ -528,7 +528,7 @@ bot.action("set_sell_100", async ctx => {
 
 bot.action("set_sell_x", async ctx => {
     try {
-        await ctx.replyWithHTML("<i>🔁 Reply with the amount of TRX you want to auto sell at.</i>")
+        await ctx.replyWithHTML("<i>🔁 Reply with the percent of price increase you want to auto sell at.</i>")
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
         console.log(err)
@@ -578,7 +578,7 @@ bot.action("buy_50", async ctx => {
 
         if(bought[0]) {
             await ctx.editMessageText(
-                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : <code>${ctx.session.token}</code></i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
                 {
                     parse_mode: "HTML",
                     message_id: msg.message_id
@@ -604,7 +604,7 @@ bot.action("buy_100", async ctx => {
 
         if(bought[0]) {
             await ctx.editMessageText(
-                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : <code>${ctx.session.token}</code></i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
                 {
                     parse_mode: "HTML",
                     message_id: msg.message_id
@@ -665,7 +665,7 @@ bot.command("sell", async ctx => {
                             
                         }
                     )
-                }, 1000 * 5);
+                }, 1000 * 3);
             } else {
                 await ctx.replyWithHTML(
                     "<i>📈 No open positions.</i>",
@@ -719,7 +719,7 @@ bot.action("sell", async ctx => {
                             
                         }
                     )
-                }, 1000 * 5);
+                }, 1000 * 3);
             } else {
                 await ctx.replyWithHTML(
                     "<i>📈 No open positions.</i>",
@@ -854,7 +854,7 @@ bot.hears(/T/, async ctx => {
     
                             if(bought[0]) {
                                 await ctx.editMessageText(
-                                    `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.message.text}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                                    `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : <code>${ctx.message.text}</code></i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
                                     {
                                         parse_mode: "HTML",
                                         message_id: msg.message_id
@@ -925,7 +925,7 @@ bot.on("message", async ctx => {
     
                 if(bought[0]) {
                     await ctx.editMessageText(
-                        `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                        `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : <code>${ctx.session.token}</code></i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
                         {
                             parse_mode: "HTML",
                             message_id: msg.message_id
@@ -952,7 +952,7 @@ bot.on("message", async ctx => {
                 }
             } 
             
-            if(text == "🔁 Reply with the amount of TRX you want to auto sell at.") {
+            if(text == "🔁 Reply with the percent of price increase you want to auto sell at.") {
                 console.log(ctx.message.text)
                 const is_user = await isUser(ctx.chat.id)
                 console.log(is_user)
