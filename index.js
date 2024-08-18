@@ -595,7 +595,7 @@ bot.command("sell", async ctx => {
             const trades = is_user[0].trades.filter((trade) => trade.sold == false)
             console.log(trades)
 
-            if(trades > 0) {
+            if(trades.length > 0) {
                 let text = "<i>📈 Open Positions:</i>\n\n"
 
                 trades.forEach(async (trade, i) => {
@@ -649,7 +649,7 @@ bot.action("sell", async ctx => {
             const trades = is_user[0].trades.filter((trade) => trade.sold == false)
             console.log(trades)
 
-            if(trades > 0) {
+            if(trades.length > 0) {
                 let text = "<i>📈 Open Positions:</i>\n\n"
 
                 trades.forEach(async (trade, i) => {
