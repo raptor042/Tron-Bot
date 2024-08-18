@@ -1,6 +1,6 @@
 import { Telegraf, Markup, session } from "telegraf"
 import { config } from "dotenv"
-import { connectDB, createUser, getUser, updateUserAutoBuySetting, updateUserAutoSellSetting, updateUserBuyWithSetting, updateUserSellAtSetting, updateUserTrade, updateUserTrades, updateUserWallet } from "./src/db/db.js"
+import { connectDB, createUser, getUser, getUserTradeByMsg, updateUserAutoBuySetting, updateUserAutoSellSetting, updateUserBuyWithSetting, updateUserSellAtSetting, updateUserTrade, updateUserTrades, updateUserWallet } from "./src/db/db.js"
 import { approve, buy, getAmountsOut, getConnection, getTimestamp, getTokenInfo, sell, withdraw } from "./src/web3/web3.js"
 import { getTrade, isUser, monitorPrices, priceChangePercent, toDecimals } from "./src/utils.js"
 
@@ -13,7 +13,7 @@ const bot = new Telegraf(URL, { handlerTimeout: 9_000_000 })
 bot.use(session({ defaultSession: () => ({ token: '', amount: 0 }) }));
 bot.use(Telegraf.log())
 
-const buyToken = async (userId, address, amount) => {
+const buyToken = async (userId, address, amount, msg_id) => {
     try {
         const is_user = await isUser(userId)
 
@@ -44,7 +44,8 @@ const buyToken = async (userId, address, amount) => {
                     tokenInfo[4],
                     amount,
                     result[1],
-                    timestamp
+                    timestamp,
+                    msg_id
                 )
             }
 
@@ -140,7 +141,8 @@ bot.command("start", async ctx => {
                             [
                                 Markup.button.callback("💳 Wallet", "wallet"),
                                 Markup.button.callback("🛠 Settings", "settings"),  
-                            ]
+                            ],
+                            [Markup.button.callback("🔄 Refresh", "refresh")]
                         ])
                     }
                 )
@@ -164,6 +166,40 @@ bot.command("start", async ctx => {
             }
         } else {
             await ctx.reply("⚠️ Bot is only used on private chats.")
+        }
+    } catch (err) {
+        await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
+        console.log(err)
+    }
+})
+
+bot.action("refresh", async ctx => {
+    try {
+        const is_user = await isUser(ctx.chat.id)
+        const chat = await ctx.getChat()
+
+        if(is_user[1] && "pinned_message" in chat) {
+            const pinned_msg = chat.pinned_message.message_id
+            console.log(pinned_msg)
+
+            const trades = await getUserTradeByMsg(ctx.chat.id, pinned_msg)
+            console.log(trades)
+
+            const tokenInfo = await getTokenInfo(trades[0].token)
+            console.log(tokenInfo)
+
+            const pnl = priceChangePercent(trades[0].price, tokenInfo[4])
+            console.log(pnl)
+
+            if(bought[0]) {
+                await ctx.editMessageText(
+                    `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${trades[0].token}</i>\n\n<i>Price: ${Number(tokenInfo[4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${trades[0].base_amount.toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(trades[0].quote_amount, tokenInfo[0], false).toFixed(2)} ${trades[0].quote}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(trades[0].bought_at * 1000)}</i>`,
+                    {
+                        parse_mode: "HTML",
+                        message_id: pinned_msg
+                    }
+                )
+            }
         }
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
@@ -493,16 +529,20 @@ bot.action("buy_50", async ctx => {
         const msg = await ctx.reply("📈 Buying.....")
         console.log(msg)
 
-        const bought = await buyToken(ctx.chat.id, ctx.session.token, 50)
+        const bought = await buyToken(ctx.chat.id, ctx.session.token, 50, msg.message_id)
 
         if(bought[0]) {
             await ctx.editMessageText(
-                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
                 {
                     parse_mode: "HTML",
                     message_id: msg.message_id
                 }
             )
+
+            setTimeout(async () => {
+                await ctx.pinChatMessage(msg.message_id)
+            }, 1000);
         }
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
@@ -515,16 +555,20 @@ bot.action("buy_100", async ctx => {
         const msg = await ctx.reply("📈 Buying.....")
         console.log(msg)
 
-        const bought = await buyToken(ctx.chat.id, ctx.session.token, 100)
+        const bought = await buyToken(ctx.chat.id, ctx.session.token, 100, msg.message_id)
 
         if(bought[0]) {
             await ctx.editMessageText(
-                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
                 {
                     parse_mode: "HTML",
                     message_id: msg.message_id
                 }
             )
+
+            setTimeout(async () => {
+                await ctx.pinChatMessage(msg.message_id)
+            }, 1000);
         }
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
@@ -547,7 +591,7 @@ bot.command("sell", async ctx => {
         console.log(is_user)
 
         if(is_user[1]) {
-            const trades = is_user[0].trades.filter((trade) => !trade.sold)
+            const trades = is_user[0].trades.filter((trade) => trade.sold == false)
 
             if(trades > 0) {
                 let text = "<i>📈 Open Positions:</i>\n\n"
@@ -600,7 +644,7 @@ bot.action("sell", async ctx => {
         console.log(is_user)
 
         if(is_user[1]) {
-            const trades = is_user[0].trades.filter((trade) => !trade.sold)
+            const trades = is_user[0].trades.filter((trade) => trade.sold == false)
 
             if(trades > 0) {
                 let text = "<i>📈 Open Positions:</i>\n\n"
@@ -759,16 +803,20 @@ bot.hears(/T/, async ctx => {
                             const msg = await ctx.reply("📈 Buying.....")
                             console.log(msg)
         
-                            const bought = await buyToken(ctx.chat.id, ctx.message.text, Number(is_user[0].settings.buy_with))
-        
+                            const bought = await buyToken(ctx.chat.id, ctx.message.text, Number(is_user[0].settings.buy_with), msg.message_id)
+    
                             if(bought[0]) {
                                 await ctx.editMessageText(
-                                    `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                                    `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.message.text}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
                                     {
                                         parse_mode: "HTML",
                                         message_id: msg.message_id
                                     }
                                 )
+
+                                setTimeout(async () => {
+                                    await ctx.pinChatMessage(msg.message_id)
+                                }, 1000);
                             }
                         } else {
                             await ctx.replyWithHTML(
@@ -826,16 +874,20 @@ bot.on("message", async ctx => {
                 const msg = await ctx.reply("📈 Buying.....")
                 console.log(msg)
                 
-                const bought = await buyToken(ctx.chat.id, ctx.session.token, Number(ctx.message.text))
+                const bought = await buyToken(ctx.chat.id, ctx.session.token, Number(ctx.message.text), msg.message_id)
     
                 if(bought[0]) {
                     await ctx.editMessageText(
-                        `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
+                        `<i>📈 Trade successfully excecuted.</i>\n\n<i>Token : ${ctx.session.token}</i>\n\n<i>Price: ${Number(bought[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(bought[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Bought : ${toDecimals(bought[3], bought[1][0], false).toFixed(2)} ${bought[1][1]}</i>\n\n<i>pNl : 0</i>\n\n<i>Time : ${new Date(bought[4] * 1000)}</i>`,
                         {
                             parse_mode: "HTML",
                             message_id: msg.message_id
                         }
                     )
+
+                    setTimeout(async () => {
+                        await ctx.pinChatMessage(msg.message_id)
+                    }, 1000);
                 }
             }
             

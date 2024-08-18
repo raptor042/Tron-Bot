@@ -35,6 +35,18 @@ export const getUsers = async () => {
     }
 }
 
+export const getUserTradeByMsg = async (userId, message_id) => {
+    try {
+        const user = await UserModel.findOne(
+            { userId, trades : { $elemMatch : { message_id } } }
+        )
+
+        return user.trades
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 export const createUser = async (userId, username, pubKey, secKey) => {
     try {
         const user = new UserModel({
@@ -68,6 +80,7 @@ export const updateUserTrades = async (
     base_amount,
     quote_amount,
     bought_at,
+    message_id
 ) => {
     try {
         const trade = {
@@ -81,6 +94,7 @@ export const updateUserTrades = async (
             pNl: 0,
             sold_at: 0,
             sold: false,
+            message_id
         }
 
         const user = await UserModel.findOneAndUpdate(

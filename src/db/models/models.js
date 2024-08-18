@@ -16,7 +16,8 @@ const UserSchema = new Schema({
             pNl: Number,
             bought_at: Number,
             sold_at: Number,
-            sold: Boolean
+            sold: Boolean,
+            message_id: Number,
         }
     ],
     settings: {
