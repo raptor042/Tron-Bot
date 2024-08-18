@@ -10,7 +10,7 @@ const URL = process.env.TELEGRAM_BOT_API
 
 const bot = new Telegraf(URL, { handlerTimeout: 9_000_000 })
 
-bot.use(session({ defaultSession: () => ({ token: '', amount: 0}) }));
+bot.use(session({ defaultSession: () => ({ token: '', amount: 0 }) }));
 bot.use(Telegraf.log())
 
 const buyToken = async (userId, address, amount) => {
