@@ -9,13 +9,13 @@ export const getConnection = (secKey) => {
     if(process.env.NODE_ENV == "DEV") {
         return new TronWeb({
             fullHost: process.env.TRON_MAINNET_URL,
-            // headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
+            headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
             privateKey: secKey || process.env.PRIVATE_KEY
         })
     } else {
         return new TronWeb({
             fullHost: process.env.TRON_MAINNET_URL,
-            // headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
+            headers: { "TRON-PRO-API-KEY": process.env.TRON_API_KEY },
             privateKey: secKey || process.env.PRIVATE_KEY
         })
     }

@@ -313,14 +313,14 @@ bot.action("confirm_reset", async ctx => {
         console.log(is_user)
 
         if(is_user[1]) {
-            await ctx.replyWithHTML(`<i>🔐 Old Wallet Private Key:</i>\n\n<i>${is_user[0].secKey}</i>\n\n<i>You can now import the key into a wallet. Save this key in case you need to access the wallet again.</i>`)
+            await ctx.replyWithHTML(`<i>🔐 Old Wallet Private Key:</i>\n\n<code>${is_user[0].secKey}</code>\n\n<i>You can now import the key into a wallet. Save this key in case you need to access the wallet again.</i>`)
 
             const web3 = getConnection()
             const account = await web3.createAccount()
             console.log(account)
 
             if(account) {
-                await ctx.replyWithHTML(`<i>🔑 Your new wallet address is:</i>\n\n<i>${account.address.base58}</i>\n\n<i>You can now send TRX to this address to begin trading.</i>`)
+                await ctx.replyWithHTML(`<i>🔑 Your new wallet address is:</i>\n\n<code>${account.address.base58}</code>\n\n<i>You can now send TRX to this address to begin trading.</i>`)
 
                 await updateUserWallet(
                     ctx.chat.id,
