@@ -59,8 +59,8 @@ export const createUser = async (userId, username, pubKey, secKey) => {
             settings: {
                 buy_with: 0,
                 auto_buy: false,
-                sell_at: 100,
-                auto_sell: true,
+                sell_at: 0,
+                auto_sell: false,
             }
         })
 

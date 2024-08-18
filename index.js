@@ -134,7 +134,7 @@ bot.command("start", async ctx => {
                 }
     
                 await ctx.replyWithHTML(
-                    `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the <b>MEGATRON trading bot</b> where you can buy/sell at light speeds ⚡️ and secure massive profits 💰.</i>\n\n<i>A wallet has been created for you which will be used only for trading, make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<i>${account.address.base58}</i>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
+                    `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the <b>MEGATRON trading bot</b> where you can buy/sell at light speeds ⚡️ and secure massive profits 💰.</i>\n\n<i>A wallet has been created for you which will be used only for trading, make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<code>${account.address.base58}</code>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
                     {
                         parse_mode : "HTML",
                         ...Markup.inlineKeyboard([
@@ -155,7 +155,7 @@ bot.command("start", async ctx => {
                 )
             } else {
                 await ctx.replyWithHTML(
-                    `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the <b>MEGATRON trading bot</b> where you can buy/sell at light speeds ⚡️ and secure massive profits 💰.</i>\n\n<i>Make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<i>${is_user[0].pubKey}</i>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
+                    `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the <b>MEGATRON trading bot</b> where you can buy/sell at light speeds ⚡️ and secure massive profits 💰.</i>\n\n<i>Make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<code>${is_user[0].pubKey}</code>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
                     {
                         parse_mode : "HTML",
                         ...Markup.inlineKeyboard([
@@ -247,7 +247,7 @@ bot.action("wallet", async ctx => {
             console.log(Number(balance), Number(balance) / 1_000_000)
 
             await ctx.replyWithHTML(
-                `<i>💳 Your Wallet:</i>\n\n<i>🔑 Address: ${is_user[0].pubKey}</i>\n\n<i>💰 Balance: ${Number(balance) / 1_000_000} TRX</i>\n\n<i>Tap to copy the address and send TRX to deposit.</i>`,
+                `<i>💳 Your Wallet:</i>\n\n<i>🔑 Address: <code>${is_user[0].pubKey}</code></i>\n\n<i>💰 Balance: ${Number(balance) / 1_000_000} TRX</i>\n\n<i>Tap to copy the address and send TRX to deposit.</i>`,
                 {
                     parse_mode : "HTML",
                     ...Markup.inlineKeyboard([
@@ -360,7 +360,7 @@ bot.action("confirm_export", async ctx => {
         console.log(is_user)
 
         if(is_user[1]) {
-            await ctx.replyWithHTML(`<i>🔐 Private Key:</i>\n\n<i>${is_user[0].secKey}</i>\n\n<i>You can now import the key into a wallet. Delete this message once you are done.</i>`)
+            await ctx.replyWithHTML(`<i>🔐 Private Key:</i>\n\n<code>${is_user[0].secKey}</code>\n\n<i>You can now import the key into a wallet. Delete this message once you are done.</i>`)
         }
     } catch (err) {
         await ctx.replyWithHTML(`<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`)
