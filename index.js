@@ -148,7 +148,7 @@ bot.command("start", async ctx => {
                 )
             } else {
                 await ctx.replyWithHTML(
-                    `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the best <b>TRON trading bot</b> where you can buy/sell at light speeds and secure massive profits 💰.</i>\n\n<i>Make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<i>${is_user[0].pubKey}</i>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
+                    `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the <b>MEGATRON trading bot</b> where you can buy/sell at light speeds ⚡️ and secure massive profits 💰.</i>\n\n<i>A wallet has been created for you which will be used only for trading, make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<i>${account.address.base58}</i>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
                     {
                         parse_mode : "HTML",
                         ...Markup.inlineKeyboard([
@@ -159,7 +159,8 @@ bot.command("start", async ctx => {
                             [
                                 Markup.button.callback("💳 Wallet", "wallet"),
                                 Markup.button.callback("🛠 Settings", "settings"),  
-                            ]
+                            ],
+                            [Markup.button.callback("🔄 Refresh", "refresh")]
                         ])
                     }
                 )
