@@ -867,7 +867,7 @@ bot.hears(/T/, async ctx => {
                             }
                         } else {
                             await ctx.replyWithHTML(
-                                `<b>💎 ${tokenInfo[5]} | ${tokenInfo[1]} 💎</b>\n\n<b>📌 CA:</b><i>${ctx.message.text}</i>\n\n<b>💵 Price:</b><i>${Number(tokenInfo[4]).toFixed(6)} TRX</i>\n\n<b>💳 Wallet Balance:</b><i>${(Number(balance) / 1_000_000).toFixed(2)} TRX</i>\n\n<b>💰 Wanna buy a bag, 👇 click ant button below:</b>`,
+                                `<b>💎 ${tokenInfo[5]} | ${tokenInfo[1]} 💎</b>\n\n<b>📌 CA:</b><code>${ctx.message.text}</code>\n\n<b>💵 Price:</b><i>${Number(tokenInfo[4]).toFixed(6)} TRX</i>\n\n<b>💳 Wallet Balance:</b><i>${(Number(balance) / 1_000_000).toFixed(2)} TRX</i>\n\n<b>💰 Wanna buy a bag, 👇 click ant button below:</b>`,
                                 {
                                     parse_mode : "HTML",
                                     ...Markup.inlineKeyboard([
