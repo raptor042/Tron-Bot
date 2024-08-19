@@ -24,7 +24,7 @@ const buyToken = async (userId, address, amount, msg_id) => {
             const timestamp = await getTimestamp()
             console.log(timestamp)
 
-            const amountsOut = await getAmountsOut(address, amount)
+            const amountsOut = await getAmountsOut(address, amount, true)
             console.log(amountsOut)
 
             let result = await buy(
@@ -66,6 +66,9 @@ const sellToken = async (userId, address, amount) => {
             const tokenInfo = await getTokenInfo(address)
             console.log(tokenInfo)
 
+            const amountsOut = await getAmountsOut(address, amount, false)
+            console.log(amountsOut)
+
             const timestamp = await getTimestamp()
             console.log(timestamp)
 
@@ -101,7 +104,7 @@ const sellToken = async (userId, address, amount) => {
                 }
             }
 
-            return [true, tokenInfo, result[0], result[1], timestamp]
+            return [true, tokenInfo, amountsOut[0], amountsOut[1], timestamp]
         }
     } catch (err) {
         console.log(err)
@@ -829,7 +832,7 @@ bot.hears(/T/, async ctx => {
 
                         if(sold[0]) {
                             await ctx.editMessageText(
-                                `<i>📈 Sold successfully excecuted.</i>\n\n<i>Token : ${ctx.message.text}</i>\n\n<i>Price: ${Number(sold[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(sold[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Sold : ${toDecimals(sold[3], sold[1][0], false).toFixed(2)} ${sold[1][1]}</i>\n\n<i>Time : ${new Date(sold[4] * 1000)}</i>`,
+                                `<i>📈 Sold successfully excecuted.</i>\n\n<code>Token : ${ctx.message.text}</code>\n\n<i>Price: ${Number(sold[1][4]).toFixed(6)} TRX</i>\n\n<i>Amount : ${(Number(sold[2]) / 1_000_000).toFixed(2)} TRX</i>\n\n<i>Sold : ${toDecimals(sold[3], sold[1][0], false).toFixed(2)} ${sold[1][1]}</i>\n\n<i>Time : ${new Date(sold[4] * 1000)}</i>`,
                                 {
                                     parse_mode: "HTML",
                                     message_id: msg.message_id
