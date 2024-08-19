@@ -126,7 +126,7 @@ export const approve = async (address, pub, sec, amount) => {
     console.log(Number(allowance), amount);
 
     const result = await token.approve(SunSwapV2Router, `${amount}`).send({
-      feeLimit: 20_000_000,
+      feeLimit: 50_000_000,
       callValue: 0,
       shouldPollResponse: true,
     });
@@ -151,7 +151,7 @@ export const buy = async (address, pub, sec, amount) => {
     const result = await router
       .swapExactETHForTokens(0, [WTRX, address], pub, deadline + 2000)
       .send({
-        feeLimit: 20_000_000,
+        feeLimit: 50_000_000,
         callValue: amount * 1_000_000,
         shouldPollResponse: true,
       });
@@ -182,7 +182,7 @@ export const sell = async (address, pub, sec, amount) => {
         deadline + 2000
       )
       .send({
-        feeLimit: 20_000_000,
+        feeLimit: 50_000_000,
         callValue: 0,
         shouldPollResponse: true,
       });
