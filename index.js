@@ -52,7 +52,7 @@ const buyToken = async (userId, address, amount, msg_id) => {
       const timestamp = await getTimestamp();
       console.log(timestamp);
 
-      const amountsOut = await getAmountsOut(address, amount);
+      const amountsOut = await getAmountsOut(address, amount, true);
       console.log(amountsOut);
 
       let result = await buy(
@@ -98,6 +98,9 @@ const sellToken = async (userId, address, amount) => {
       const tokenInfo = await getTokenInfo(address);
       console.log(tokenInfo);
 
+      const amountsOut = await getAmountsOut(address, amount, false);
+      console.log(amountsOut);
+
       const timestamp = await getTimestamp();
       console.log(timestamp);
 
@@ -128,7 +131,7 @@ const sellToken = async (userId, address, amount) => {
         }
       }
 
-      return [true, tokenInfo, result[0], result[1], timestamp];
+      return [true, tokenInfo, amountsOut[0], amountsOut[1], timestamp];
     }
   } catch (err) {
     console.log(err);
@@ -160,8 +163,7 @@ bot.command("start", async (ctx) => {
           await updateUserReferrals(ctx.args[0]);
         }
 
-        await bot.telegram.sendMessage(
-          ctx.message.from.id,
+        await ctx.replyWithHTML(
           `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the <b>MEGATRON trading bot</b> where you can buy/sell at light speeds ⚡️ and secure massive profits 💰.</i>\n\n<i>A wallet has been created for you which will be used only for trading, make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<code>${account.address.base58}</code>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
           {
             parse_mode: "HTML",
@@ -182,8 +184,7 @@ bot.command("start", async (ctx) => {
           }
         );
       } else {
-        await bot.telegram.sendMessage(
-          ctx.message.from.id,
+        await ctx.replyWithHTML(
           `<i>Hello ${ctx.message.from.username} 👋, </i>\n\n<i>Welcome to the <b>MEGATRON trading bot</b> where you can buy/sell at light speeds ⚡️ and secure massive profits 💰.</i>\n\n<i>Make sure you fund the wallet with TRX and keep the private key safe.</i>\n\n<code>${is_user[0].pubKey}</code>\n\n<i>💰 Wanna buy a bag, just enter the token address.</i>`,
           {
             parse_mode: "HTML",
@@ -205,14 +206,10 @@ bot.command("start", async (ctx) => {
         );
       }
     } else {
-      await bot.telegram.sendMessage(
-        ctx.message.from.id,
-        "⚠️ Bot is only used on private chats."
-      );
+      await ctx.reply("⚠️ Bot is only used on private chats.");
     }
   } catch (err) {
-    await bot.telegram.sendMessage(
-      ctx.message.from.id,
+    await ctx.replyWithHTML(
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`
     );
     console.log(err);
@@ -306,7 +303,7 @@ bot.action("wallet", async (ctx) => {
       console.log(Number(balance), Number(balance) / 1_000_000);
 
       await bot.telegram.sendMessage(
-        ctx.message.from.id,
+        ctx.chat.id,
         `<i>💳 Your Wallet:</i>\n\n<i>🔑 Address: <code>${
           is_user[0].pubKey
         }</code></i>\n\n<i>💰 Balance: ${
@@ -329,7 +326,7 @@ bot.action("wallet", async (ctx) => {
     }
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -404,10 +401,8 @@ bot.action("confirm_reset", async (ctx) => {
     console.log(is_user);
 
     if (is_user[1]) {
-      await bot.telegram.sendMessage(
-        ctx.message.from.id,
-        `<i>🔐 Old Wallet Private Key:</i>\n\n<i>${is_user[0].secKey}</i>\n\n<i>You can now import the key into a wallet. Save this key in case you need to access the wallet again.</i>`,
-        { parse_mode: "HTML" }
+      await ctx.replyWithHTML(
+        `<i>🔐 Old Wallet Private Key:</i>\n\n<i>${is_user[0].secKey}</i>\n\n<i>You can now import the key into a wallet. Save this key in case you need to access the wallet again.</i>`
       );
 
       const web3 = getConnection();
@@ -415,10 +410,8 @@ bot.action("confirm_reset", async (ctx) => {
       console.log(account);
 
       if (account) {
-        await bot.telegram.sendMessage(
-          ctx.message.from.id,
-          `<i>🔑 Your new wallet address is:</i>\n\n<i>${account.address.base58}</i>\n\n<i>You can now send TRX to this address to begin trading.</i>`,
-          { parse_mode: "HTML" }
+        await ctx.replyWithHTML(
+          `<i>🔑 Your new wallet address is:</i>\n\n<i>${account.address.base58}</i>\n\n<i>You can now send TRX to this address to begin trading.</i>`
         );
 
         await updateUserWallet(
@@ -878,7 +871,7 @@ bot.command("sell", async (ctx) => {
         });
 
         setTimeout(async () => {
-          await bot.telegram.sendMessage(ctx.message.from.id, text, {
+          await ctx.replyWithHTML(text, {
             parse_mode: "HTML",
             ...Markup.inlineKeyboard([
               [Markup.button.callback("❌ Cancel", "cancel")],
@@ -891,16 +884,10 @@ bot.command("sell", async (ctx) => {
           });
         }, 1000 * 3);
       } else {
-        await bot.telegram.sendMessage(
-          ctx.message.from.id,
-          "<i>📈 No open positions.</i>",
-          {
-            parse_mode: "HTML",
-            ...Markup.inlineKeyboard([
-              Markup.button.callback("Close", "cancel"),
-            ]),
-          }
-        );
+        await ctx.replyWithHTML("<i>📈 No open positions.</i>", {
+          parse_mode: "HTML",
+          ...Markup.inlineKeyboard([Markup.button.callback("Close", "cancel")]),
+        });
       }
     }
   } catch (err) {
@@ -1162,8 +1149,7 @@ bot.hears(/T/, async (ctx) => {
                 }, 1000);
               }
             } else {
-              await bot.telegram.sendMessage(
-                ctx.message.from.id,
+              await ctx.replyWithHTML(
                 `<b>💎 ${tokenInfo[5]} | ${
                   tokenInfo[1]
                 } 💎</b>\n\n<b>📌 CA:</b><code>${

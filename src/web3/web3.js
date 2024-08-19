@@ -81,13 +81,19 @@ export const getTokenInfo = async (address) => {
     }
 }
 
-export const getAmountsOut = async (address, amount) => {
+export const getAmountsOut = async (address, amount, w) => {
     try {
         const web3 = getConnection()
         const router = await web3.contract(SunSwapV2RouterABI, SunSwapV2Router)
+        let amountsOut
 
-        const amountsOut = await router.getAmountsOut(amount, [WTRX, address]).call()
-        console.log(amountsOut)
+        if(w) {
+            amountsOut = await router.getAmountsOut(amount, [WTRX, address]).call()
+            console.log(amountsOut)
+        } else {
+            amountsOut = await router.getAmountsOut(amount, [address, WTRX]).call()
+            console.log(amountsOut)
+        }
 
         return [Number(amountsOut[0][0]), Number(amountsOut[0][1])]
     } catch (err) {
