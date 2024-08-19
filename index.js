@@ -143,7 +143,7 @@ const sellToken = async (userId, address, amount) => {
 bot.command("start", async (ctx) => {
   try {
     if (ctx.message.chat.type == "private") {
-      const is_user = await isUser(ctx.message.from.id);
+      const is_user = await isUser(ctx.chat.id);
       console.log(is_user);
 
       if (!is_user[1]) {
@@ -152,7 +152,7 @@ bot.command("start", async (ctx) => {
         console.log(account);
 
         const user = await createUser(
-          ctx.message.from.id,
+          ctx.chat.id,
           ctx.message.from.username,
           account.address.base58,
           account.privateKey
@@ -271,7 +271,7 @@ bot.action("referrals", async (ctx) => {
 
   if (is_user[1]) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>👨‍👧‍👦 REFERRALS:</b>\n\n<i>Your Referral Link : https://t.me/MegaTronTradingBot?start=${
         ctx.chat.id
       }</i>\n\n<i>👥 Referrals: ${
@@ -286,7 +286,7 @@ bot.action("referrals", async (ctx) => {
     );
   } else {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       "⚠️ You do not have a wallet for trading yet, Use the '/start' command to create your wallet, fund it with TRX and start trading."
     );
   }
@@ -337,7 +337,7 @@ bot.action("wallet", async (ctx) => {
 bot.action("withdraw_all", async (ctx) => {
   try {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       "<i>🔁 Reply with the destination address.</i>",
       {
         parse_mode: "HTML",
@@ -345,7 +345,7 @@ bot.action("withdraw_all", async (ctx) => {
     );
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       {
         parse_mode: "HTML",
@@ -358,13 +358,13 @@ bot.action("withdraw_all", async (ctx) => {
 bot.action("withdraw_x", async (ctx) => {
   try {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       "<i>🔁 Reply with the amount of TRX you want to withdraw.</i>",
       { parse_mode: "HTML" }
     );
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -375,7 +375,7 @@ bot.action("withdraw_x", async (ctx) => {
 bot.action("reset", async (ctx) => {
   try {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       "<i>❓ Are you sure you want to reset your <b>Wallet</b>?</i>\n\n<b>🚨 Warning:</b> <i>This action is irreversible.</i>\n\n<i>A new wallet will be created and the old one will be discarded.</i>",
       {
         parse_mode: "HTML",
@@ -387,7 +387,7 @@ bot.action("reset", async (ctx) => {
     );
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -423,7 +423,7 @@ bot.action("confirm_reset", async (ctx) => {
     }
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -434,7 +434,7 @@ bot.action("confirm_reset", async (ctx) => {
 bot.action("export", async (ctx) => {
   try {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       "<i>❓🔐 Are you sure you want to export your <b>Private Key</b>?</i>",
       {
         parse_mode: "HTML",
@@ -446,7 +446,7 @@ bot.action("export", async (ctx) => {
     );
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -461,14 +461,14 @@ bot.action("confirm_export", async (ctx) => {
 
     if (is_user[1]) {
       await bot.telegram.sendMessage(
-        ctx.message.from.id,
+        ctx.chat.id,
         `<i>🔐 Private Key:</i>\n\n<code>${is_user[0].secKey}</code>\n\n<i>You can now import the key into a wallet. Delete this message once you are done.</i>`,
         { parse_mode: "HTML" }
       );
     }
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -483,7 +483,7 @@ bot.action("settings", async (ctx) => {
 
     if (is_user[1]) {
       await bot.telegram.sendMessage(
-        ctx.message.from.id,
+        ctx.chat.id,
         `<i>🛠 Settings:</i>\n\n<b>AUTO BUY${
           is_user[0].settings.auto_buy
             ? "(🟢 Enabled currently)"
@@ -514,7 +514,7 @@ bot.action("settings", async (ctx) => {
     }
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -532,14 +532,14 @@ bot.action("toggle_buy", async (ctx) => {
         await updateUserAutoBuySetting(ctx.chat.id, false);
 
         await bot.telegram.sendMessage(
-          ctx.message.from.id,
+          ctx.chat.id,
           "🔴 Auto Buy is now disabled."
         );
       } else {
         await updateUserAutoBuySetting(ctx.chat.id, true);
 
         await bot.telegram.sendMessage(
-          ctx.message.from.id,
+          ctx.chat.id,
           "🟢 Auto Buy is now enabled. Make sure you set the amount to buy with, by clicking the above buttons 🖕."
         );
       }
@@ -562,14 +562,14 @@ bot.action("set_buy_50", async (ctx) => {
         await updateUserBuyWithSetting(ctx.chat.id, 50);
 
         await bot.telegram.sendMessage(
-          ctx.message.from.id,
+          ctx.chat.id,
           "🟢 Auto Buy is set to buy with 50 TRX."
         );
       }
     }
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -587,14 +587,14 @@ bot.action("set_buy_100", async (ctx) => {
         await updateUserBuyWithSetting(ctx.chat.id, 100);
 
         await bot.telegram.sendMessage(
-          ctx.message.from.id,
+          ctx.chat.id,
           "🟢 Auto Buy is set to buy with 100 TRX."
         );
       }
     }
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -605,13 +605,13 @@ bot.action("set_buy_100", async (ctx) => {
 bot.action("set_buy_x", async (ctx) => {
   try {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       "<i>🔁 Reply with the amount of TRX you want to auto buy with.</i>",
       { parse_mode: "HTML" }
     );
   } catch (err) {
     await bot.telegram.sendMessage(
-      ctx.message.from.id,
+      ctx.chat.id,
       `<b>🚫 An error just ocurred. Sorry for the Inconveniences.</b>`,
       { parse_mode: "HTML" }
     );
@@ -629,14 +629,14 @@ bot.action("toggle_sell", async (ctx) => {
         await updateUserAutoSellSetting(ctx.chat.id, false);
 
         await bot.telegram.sendMessage(
-          ctx.message.from.id,
+          ctx.chat.id,
           "🔴 Auto Sell is now disabled."
         );
       } else {
         await updateUserAutoSellSetting(ctx.chat.id, true);
 
         await bot.telegram.sendMessage(
-          ctx.message.from.id,
+          ctx.chat.id,
           "🟢 Auto Sell is now enabled. Make sure you set the percent to sell at, by clicking the above buttons 🖕."
         );
       }
@@ -930,7 +930,7 @@ bot.action("sell", async (ctx) => {
         });
 
         setTimeout(async () => {
-          await bot.telegram.sendMessage(ctx.message.from.id, text, {
+          await bot.telegram.sendMessage(ctx.chat.id, text, {
             parse_mode: "HTML",
             ...Markup.inlineKeyboard([
               [Markup.button.callback("❌ Cancel", "cancel")],
@@ -944,7 +944,7 @@ bot.action("sell", async (ctx) => {
         }, 1000 * 3);
       } else {
         await bot.telegram.sendMessage(
-          ctx.message.from.id,
+          ctx.chat.id,
           "<i>📈 No open positions.</i>",
           {
             parse_mode: "HTML",
@@ -1029,7 +1029,7 @@ bot.action("sell_x", async (ctx) => {
 bot.hears(/T/, async (ctx) => {
   try {
     if (ctx.message.chat.type == "private") {
-      const is_user = await isUser(ctx.message.from.id);
+      const is_user = await isUser(ctx.chat.id);
       const web3 = getConnection();
       const isAddress = web3.isAddress(ctx.message.text);
       console.log(isAddress);
