@@ -855,13 +855,25 @@ bot.command("sell", async (ctx) => {
           const tokenInfo = await getTokenInfo(trade.token);
           console.log(tokenInfo);
 
+          const pnl = priceChangePercent(trade.price, tokenInfo[4]);
+          const currentWorth = Number(
+            (pnl[0] / 100) * trade.base_amount + trade.base_amount
+          );
+          console.log(`PNL: ${pnl}`);
+          console.log(`PRICE1: ${trade.price}`);
+          console.log(`price2: ${tokenInfo[4]}`);
+
           text += `<b>${i + 1}.)</b><i>Token : <code>${
             trade.token
           }</code></i>\n\n<i>Price: ${Number(trade.price).toFixed(
             6
-          )} TRX</i>\n\n<i>Amount : ${Number(trade.base_amount).toFixed(2)} ${
-            trade.base
-          }</i>\n\n<i>Bought : ${toDecimals(
+          )} TRX</i>\n\n<i>Initial Amount : ${Number(trade.base_amount).toFixed(
+            2
+          )} ${trade.base}</i>\n\n<i>Current Worth: ${currentWorth.toFixed(
+            2
+          )} ${trade.base}</i>\n\n<i>PNL: ${pnl[0].toFixed(
+            2
+          )}%</i>\n\n<i>Bought : ${toDecimals(
             trade.quote_amount,
             tokenInfo[0],
             false
